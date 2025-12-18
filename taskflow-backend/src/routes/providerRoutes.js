@@ -1,13 +1,13 @@
 import express from 'express';
 import {
-  getProviders,
-  getProviderById,
-  createProviderProfile,
-  updateProviderProfile,
-  deleteProviderProfile,
-  getProviderAvailability,
-  updateProviderAvailability, // <-- NEW IMPORT
+  getProviders,
+  getProviderById,
+  createProviderProfile,
+  updateProviderProfile,
+  deleteProviderProfile,
+  updateProviderAvailability, // <-- NEW IMPORT
 } from '../controllers/providerController.js';
+import { getProviderAvailability } from '../controllers/bookingController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 import { body } from 'express-validator';
 
@@ -17,8 +17,8 @@ const router = express.Router();
 // PUBLIC ROUTES (Accessible by everyone)
 // ------------------------------------------------------------------
 
-// GET /api/providers/:id/availability - Get current day's availability for display
-router.get('/:id/availability', getProviderAvailability); 
+// GET /api/providers/:id/availability - Get dynamic time slots for a given date
+router.get('/:id/availability', getProviderAvailability);
 
 // GET /api/providers - Get all providers
 router.get('/', getProviders);

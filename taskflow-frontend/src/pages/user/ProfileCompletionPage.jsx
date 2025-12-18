@@ -6,14 +6,14 @@ import { coreApi } from '../../api/serviceApi'; // Use the coreApi to update the
 
 // List of Indian states for the dropdown (for simplicity)
 const INDIAN_STATES = [
-    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", 
-    "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", 
-    "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", 
-    "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", 
-    "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", 
-    "West Bengal", 
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+    "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand",
+    "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur",
+    "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan",
+    "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand",
+    "West Bengal",
     // Union Territories
-    "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", 
+    "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu",
     "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
 ];
 
@@ -36,9 +36,9 @@ const ProfileCompletionPage = () => {
         } else if (isProfileComplete && user) {
             // Redirect to appropriate dashboard if profile is complete
             if (user.role === 'customer') {
-                navigate('/dashboard/customer');
+                navigate('/customer/dashboard');
             } else if (user.role === 'provider') {
-                navigate('/dashboard/provider');
+                navigate('/provider/dashboard');
             } else {
                 navigate('/');
             }
@@ -55,17 +55,17 @@ const ProfileCompletionPage = () => {
 
         try {
             const res = await coreApi.updateUserProfileAddress(formData);
-            
+
             // 1. Update Context State
             setIsProfileComplete(res.data.isProfileComplete); // Should be true
             toast.success('Profile complete! Welcome to TaskFlow.');
 
             // 2. Redirect based on user role
             if (user.role === 'customer') {
-                navigate('/dashboard/customer');
+                navigate('/customer/dashboard');
             } else if (user.role === 'provider') {
                 // Providers may need extra steps later, but for now, dashboard
-                navigate('/dashboard/provider');
+                navigate('/provider/dashboard');
             } else {
                 navigate('/');
             }

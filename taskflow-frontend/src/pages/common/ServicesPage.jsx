@@ -28,9 +28,10 @@ const ServicesPage = () => {
     fetchCategories();
   }, []);
 
-  const handleSearch = (query) => {
+  // FIX: Use 'category' parameter strictly for category filtering, not text search 'query'
+  const handleCategoryClick = (categorySlug) => {
     const params = new URLSearchParams();
-    if (query) params.set('query', query);
+    if (categorySlug) params.set('category', categorySlug);
     navigate(`/search?${params.toString()}`);
   };
 
@@ -62,7 +63,7 @@ const ServicesPage = () => {
               <div
                 key={cat._id}
                 className="group bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-lg hover:border-teal-500 dark:hover:border-teal-500 transition duration-300 cursor-pointer flex items-center justify-between"
-                onClick={() => handleSearch(cat.slug)}
+                onClick={() => handleCategoryClick(cat.slug)}
               >
                 <div className="flex items-center">
                   <Icon className="w-10 h-10 text-teal-600 dark:text-teal-400 mr-5" />

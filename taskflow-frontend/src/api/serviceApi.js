@@ -16,8 +16,15 @@ export const coreApi = {
   getServiceDetails: (id) => axiosClient.get(`/services/${id}`),
   getProviders: (params) => axiosClient.get('/providers', { params }), // Needed for Admin Dashboard
   getProviderDetails: (id) => axiosClient.get(`/providers/${id}`),
-  getCategories: () => axiosClient.get('/categories'), // Needed for Filters & Service Form
-  getProviderAvailability: (id, date) => axiosClient.get(`/providers/${id}/availability`, { params: { date } }), // Needed for Booking Modal
+  getCategories: () => axiosClient.get('/categories'), // Needed for Filters & Service Form
+  getProviderAvailability: (id, { date, serviceId }) =>
+    axiosClient.get(`/providers/${id}/availability`, {
+      params: { date, serviceId },
+    }), // Needed for Booking Modal
+
+  // --- Provider Availability (self-service) ---
+  getMyAvailability: () => axiosClient.get('/availability/me'),
+  updateMyAvailability: (data) => axiosClient.put('/availability', data),
 
   // --- Payment (Razorpay) ---
   createPaymentOrder: (data) => axiosClient.post('/payments/create-order', data),

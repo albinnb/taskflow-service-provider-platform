@@ -22,6 +22,7 @@ import bookingRoutes from './routes/bookingRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js'; // Payment
+import availabilityRoutes from './routes/availabilityRoutes.js';
 
 // Connect to MongoDB (Must run AFTER dotenv.config())
 connectDB();
@@ -58,6 +59,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/availability', availabilityRoutes);
 
 // === ERROR HANDLING MIDDLEWARE ===
 app.use(notFound);

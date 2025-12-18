@@ -14,6 +14,9 @@ const errorHandler = (err, req, res, next) => {
     // Provide stack trace in development for debugging
     stack: process.env.NODE_ENV === 'production' ? null : err.stack,
   });
+
+  // Log to console for server-side debugging
+  console.error(`[Error] ${req.method} ${req.originalUrl}`, err);
 };
 
 // Middleware to handle routes that don't exist

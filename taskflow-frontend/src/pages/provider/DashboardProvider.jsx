@@ -20,7 +20,7 @@ const TABS = {
  * @desc Redesigned Provider Dashboard (with Dark Mode)
  */
 const DashboardProvider = () => {
-  const { user, roleProfile, loadUser } = useAuth();
+  const { user, roleProfile, loadUser, isAuthenticated } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,13 +29,18 @@ const DashboardProvider = () => {
   const [editingService, setEditingService] = useState(null); 
 
   useEffect(() => {
-    if (roleProfile) {
+    if (roleProfile && isAuthenticated) {
       fetchData();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roleProfile, selectedStatus, view]); 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roleProfile, selectedStatus, view, isAuthenticated]); 
   
   const fetchData = async () => {
+    // If user is not authenticated (e.g., during logout redirect), skip fetching
+    if (!isAuthenticated) {
+      return;
+    }
+
     setLoading(true);
     // Clear data based on which tab is active
     if (view === TABS.SERVICES) setServices([]);
@@ -56,8 +61,13 @@ const DashboardProvider = () => {
         }
 
     } catch (error) {
-      toast.error('Failed to load dashboard data.');
-      console.error(error);
+      if (error.response?.status === 401) {
+        // Token is invalid/expired or user logged out; let global auth flow handle redirect
+        console.warn('Unauthorized when loading provider dashboard data:', error);
+      } else {
+        toast.error('Failed to load dashboard data.');
+        console.error(error);
+      }
     } finally {
       setLoading(false);
     }

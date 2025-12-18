@@ -14,7 +14,7 @@ const ServiceCard = ({ service }) => {
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row">
-      
+
       {/* Image Placeholder */}
       <div className="md:w-1/3 h-48 md:h-auto bg-slate-200 flex-shrink-0">
         <img
@@ -32,7 +32,7 @@ const ServiceCard = ({ service }) => {
               {service.title}
             </Link>
           </h3>
-          
+
           <p className="text-base text-slate-500 dark:text-slate-300 mb-3 line-clamp-2">
             {service.description}
           </p>
@@ -49,17 +49,17 @@ const ServiceCard = ({ service }) => {
           </div>
 
           <p className="text-sm text-slate-500 dark:text-slate-400">
-             Tasker: 
-             <Link to={`/provider/${provider._id}`} className='font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 hover:underline ml-1'>
-               {providerName}
-             </Link>
+            Tasker:
+            <Link to={`/provider/${provider._id}`} className='font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 hover:underline ml-1'>
+              {providerName}
+            </Link>
           </p>
         </div>
 
         {/* Price and Booking Button */}
         <div className="mt-5 pt-5 border-t border-slate-100 dark:border-slate-700 flex justify-between items-end">
           <p className="text-2xl font-extrabold text-slate-800 dark:text-white">
-            ${service.price.toFixed(2)}
+            ₹{service.price.toFixed(2)}
             <span className="text-sm text-slate-500 dark:text-slate-400 font-normal ml-1">
               (for {service.durationMinutes} min)
             </span>
