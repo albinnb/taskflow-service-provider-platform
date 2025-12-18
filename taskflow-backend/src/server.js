@@ -1,0 +1,66 @@
+import dotenv from 'dotenv';
+// CRITICAL FIX: Ensure environment variables are loaded immediately, 
+// even before other imports if your setup supports it, but placing it
+// directly after the dotenv import is the safer ESM standard.
+dotenv.config(); 
+
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import connectDB from './config/db.js';
+import { notFound, errorHandler } from './middleware/errorHandler.js';
+import { apiLimiter } from './config/rateLimit.js';
+import cookieParser from 'cookie-parser';
+
+// Import Routes
+import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import providerRoutes from './routes/providerRoutes.js';
+import serviceRoutes from './routes/serviceRoutes.js';
+import bookingRoutes from './routes/bookingRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js'; // Payment
+
+// Connect to MongoDB (Must run AFTER dotenv.config())
+connectDB();
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// === MIDDLEWARE ===
+
+app.use(helmet()); 
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'], 
+  credentials: true 
+}));
+
+app.use(express.json()); 
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+if (process.env.NODE_ENV === 'development') {
+    app.use(morgan('dev'));
+}
+
+app.use('/api', apiLimiter);
+
+// === API ROUTES ===
+app.get('/', (req, res) => res.send('LocalLink API is running...'));
+
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/providers', providerRoutes);
+app.use('/api/services', serviceRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/payments', paymentRoutes);
+
+// === ERROR HANDLING MIDDLEWARE ===
+app.use(notFound);
+app.use(errorHandler);
+
+app.listen(PORT, () => console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`));
