@@ -65,6 +65,9 @@ export const coreApi = {
   updateProviderProfile: (id, data) => axiosClient.put(`/providers/${id}`, data),
   getProviderAnalytics: (id) => axiosClient.get(`/providers/${id}/analytics`), // <-- NEW ANALYTICS API
 
+  // NEW FUNCTION: Update the logged-in user's profile (Name, Email, Phone)
+  updateUserProfile: (data) => axiosClient.put('/users/profile', data),
+
   // NEW FUNCTION: Update the logged-in user's address for profile completion
   updateUserProfileAddress: (data) => axiosClient.put('/users/profile/address', data),
 

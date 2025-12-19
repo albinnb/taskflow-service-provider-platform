@@ -1,6 +1,7 @@
 import { validationResult } from 'express-validator';
 import User from '../models/User.js';
 import asyncHandler from '../utils/asyncHandler.js';
+import { generateToken } from '../utils/jwt.js';
 
 // ------------------------------------------------------------------
 // NEW CONTROLLER: Update User Address (for self-update)
@@ -30,6 +31,15 @@ const updateAddress = asyncHandler(async (req, res) => {
         updatedUser.address.state = req.body.state;
         updatedUser.address.pincode = req.body.pincode;
 
+        // Update GeoJSON Location if provided
+        if (req.body.location) {
+            updatedUser.location = {
+                type: 'Point',
+                coordinates: req.body.location.coordinates, // [lng, lat] expected from frontend
+                formattedAddress: req.body.location.formattedAddress
+            };
+        }
+
         // Save the updated user document
         await updatedUser.save();
 
@@ -52,6 +62,42 @@ const updateAddress = asyncHandler(async (req, res) => {
 
     } else {
         // Should not happen if 'protect' middleware works, but good practice to check
+        res.status(404);
+        throw new Error('User not found');
+    }
+});
+
+/**
+ * @route PUT /api/users/profile
+ * @desc Update user profile (Name, Email, Phone)
+ * @access Private
+ */
+const updateUserProfile = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+        user.name = req.body.name || user.name;
+        user.email = req.body.email || user.email;
+        user.phone = req.body.phone || user.phone;
+
+        // If password is provided, handle it (optional, usually separate route)
+        if (req.body.password) {
+            user.passwordHash = req.body.password;
+        }
+
+        const updatedUser = await user.save();
+
+        res.json({
+            _id: updatedUser._id,
+            name: updatedUser.name,
+            email: updatedUser.email,
+            role: updatedUser.role,
+            phone: updatedUser.phone,
+            phone: updatedUser.phone,
+            isProfileComplete: updatedUser.isAddressComplete(),
+            token: generateToken(updatedUser, process.env.JWT_SECRET, process.env.JWT_EXPIRES_IN), // Fixed: Pass user object and env vars
+        });
+    } else {
         res.status(404);
         throw new Error('User not found');
     }
@@ -155,6 +201,6 @@ const deleteUser = asyncHandler(async (req, res) => {
     }
 });
 
-export { getUsers, getUserById, updateUser, deleteUser, updateAddress };
+export { getUsers, getUserById, updateUser, deleteUser, updateAddress, updateUserProfile };
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 // MODIFICATION: Added updateAddress to the export list to fix the error.

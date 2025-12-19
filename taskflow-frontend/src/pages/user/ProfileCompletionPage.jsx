@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { AuthContext } from '../../context/AuthContext';
 import { coreApi } from '../../api/serviceApi'; // Use the coreApi to update the profile
+import LocationPicker from '../../components/common/LocationPicker';
 
 // List of Indian states for the dropdown (for simplicity)
 const INDIAN_STATES = [
@@ -27,6 +28,7 @@ const ProfileCompletionPage = () => {
         state: '',
         pincode: '',
     });
+    const [selectedLocation, setSelectedLocation] = useState(null);
     const [loading, setLoading] = useState(false);
 
     // Redirect already completed users or unauthenticated users
@@ -49,12 +51,43 @@ const ProfileCompletionPage = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handleLocationChange = (locationData) => {
+        // Store full location data for submission
+        setSelectedLocation(locationData);
+
+        // Auto-fill form based on map selection
+        setFormData(prev => ({
+            ...prev,
+            house_name: locationData.houseName || prev.house_name, // Keep existing if not found
+            street_address: locationData.street || locationData.fullAddress || '',
+            city_district: locationData.city || '',
+            state: locationData.state || prev.state, // Only overwrite if we found a state
+            pincode: locationData.pincode || '',
+        }));
+
+        // Try to match state string to our dropdown list
+        if (locationData.state) {
+            const matchedState = INDIAN_STATES.find(s => s.toLowerCase() === locationData.state.toLowerCase());
+            if (matchedState) {
+                setFormData(prev => ({ ...prev, state: matchedState }));
+            }
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            const res = await coreApi.updateUserProfileAddress(formData);
+            const payload = {
+                ...formData,
+                location: selectedLocation ? {
+                    coordinates: [selectedLocation.coordinates.lng, selectedLocation.coordinates.lat],
+                    formattedAddress: selectedLocation.fullAddress
+                } : undefined
+            };
+
+            const res = await coreApi.updateUserProfileAddress(payload);
 
             // 1. Update Context State
             setIsProfileComplete(res.data.isProfileComplete); // Should be true
@@ -91,6 +124,11 @@ const ProfileCompletionPage = () => {
                 <p className="text-center text-gray-500 mb-8">
                     Please provide your service address details to start booking and providing services in your area.
                 </p>
+
+                <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Pinpoint Your Location</label>
+                    <LocationPicker onChange={handleLocationChange} />
+                </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* House Name / Flat No */}

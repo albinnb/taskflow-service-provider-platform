@@ -5,12 +5,13 @@ import { toast } from 'react-toastify';
 import { FaCalendarAlt, FaHistory, FaStar, FaTimesCircle, FaCreditCard, FaExclamationTriangle } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import DisputeModal from '../../components/common/DisputeModal';
+import EditProfileModal from '../../components/user/EditProfileModal';
 
 /**
  * @desc Redesigned Customer Dashboard (with Dark Mode)
  */
 const DashboardCustomer = () => {
-  const { user } = useAuth();
+  const { user, login } = useAuth(); // Need login to update local user state if needed, or we rely on re-fetch
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('');
@@ -19,6 +20,9 @@ const DashboardCustomer = () => {
   const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
   const [selectedDisputeBookingId, setSelectedDisputeBookingId] = useState(null);
   const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
+
+  // Profile Modal State
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   useEffect(() => {
     fetchBookings(filterStatus);
@@ -67,6 +71,22 @@ const DashboardCustomer = () => {
       toast.error(error.response?.data?.message || 'Failed to report issue.');
     } finally {
       setIsSubmittingDispute(false);
+    }
+  };
+
+  const handleProfileUpdate = async (data) => {
+    try {
+      const res = await coreApi.updateUserProfile(data);
+      // Update local storage/auth state? 
+      // For now, simple reload or we can use the login() method from context to update state if it supports it.
+      // Assuming 'login' function might store data. Ideally AuthContext exposes a 'updateUser' method.
+      // Let's just force a reload for simplicity or trust the user feels the update.
+      // A better way is to soft-reload the page or update context.
+      toast.success('Profile updated successfully!');
+      setIsProfileModalOpen(false);
+      // Optional: window.location.reload(); 
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update profile.');
     }
   };
 
@@ -150,6 +170,12 @@ const DashboardCustomer = () => {
         <h1 className="text-4xl font-extrabold text-slate-800 dark:text-white">
           Welcome, {user?.name}!
         </h1>
+        <button
+          onClick={() => setIsProfileModalOpen(true)}
+          className="px-4 py-2 bg-slate-800 dark:bg-slate-700 text-white rounded-lg hover:bg-slate-700 dark:hover:bg-slate-600 transition shadow-sm font-medium"
+        >
+          Edit Profile
+        </button>
       </div>
 
       {/* Main dashboard content */}
@@ -261,6 +287,14 @@ const DashboardCustomer = () => {
         onClose={() => setIsDisputeModalOpen(false)}
         onSubmit={handleDisputeSubmit}
         isSubmitting={isSubmittingDispute}
+      />
+
+      {/* Profile Edit Modal */}
+      <EditProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        user={user}
+        onUpdate={handleProfileUpdate}
       />
     </div>
   );

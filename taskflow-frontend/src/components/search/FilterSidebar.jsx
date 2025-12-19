@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaFilter, FaStar, FaDollarSign } from 'react-icons/fa';
+import { FaFilter, FaStar, FaDollarSign, FaLocationArrow } from 'react-icons/fa';
 import { coreApi } from '../../api/serviceApi';
 import { toast } from 'react-toastify';
 
@@ -10,6 +10,7 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
   const [localFilters, setLocalFilters] = useState(filters);
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [locationLoading, setLocationLoading] = useState(false);
 
   // Fetch categories
   useEffect(() => {
@@ -38,22 +39,54 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
 
     setLocalFilters(prev => {
       const newFilters = { ...prev, [name]: newValue };
-      Object.keys(newFilters).forEach(key => 
+      Object.keys(newFilters).forEach(key =>
         (newFilters[key] === '' || newFilters[key] === undefined || newFilters[key] === false) && delete newFilters[key]
       );
       return newFilters;
     });
   };
-  
+
   const handleApply = (e) => {
-      e.preventDefault();
-      onFilterChange(localFilters);
+    e.preventDefault();
+    onFilterChange(localFilters);
   };
-  
+
   const handleClear = () => {
-      const cleared = { query: localFilters.query }; 
-      setLocalFilters(cleared);
-      onFilterChange(cleared);
+    const cleared = { query: localFilters.query };
+    setLocalFilters(cleared);
+    onFilterChange(cleared);
+  };
+
+  const handleLocationToggle = (e) => {
+    if (e.target.checked) {
+      setLocationLoading(true);
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            setLocalFilters(prev => ({ ...prev, lat: latitude, lng: longitude }));
+            setLocationLoading(false);
+            toast.success("Location applied!");
+          },
+          (error) => {
+            console.error("Error getting location:", error);
+            toast.error("Could not get your location.");
+            setLocationLoading(false);
+          }
+        );
+      } else {
+        toast.error("Geolocation is not available in your browser.");
+        setLocationLoading(false);
+      }
+    } else {
+      // Remove location info
+      // Remove location info
+      setLocalFilters(prev => ({
+        ...prev,
+        lat: undefined,
+        lng: undefined
+      }));
+    }
   };
 
   // Reusable Tailwind classes
@@ -123,56 +156,68 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
         </div>
 
         {/* Price Range Filter (Max Price) */}
-        <div>
-          <label htmlFor="price[lte]" className={labelClass}>
-            <FaDollarSign className="inline mr-1 text-green-600" /> Max Price
-          </label>
-          <input
-            id="price[lte]"
-            type="number"
-            name="price[lte]"
-            min="0"
-            value={localFilters['price[lte]'] || ''}
-            onChange={handleChange}
-            placeholder="e.g., 150"
-            className={inputClass}
-          />
-        </div>
-        
-        {/* Verified Provider Check */}
-        <div className="flex items-center pt-2">
+        {/* Location Filter */}
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-700">
+          <label className="flex items-center cursor-pointer">
             <input
               type="checkbox"
-              id="isVerified"
-              name="isVerified"
-              checked={!!localFilters.isVerified}
-              onChange={handleChange}
-              className="h-4 w-4 text-teal-600 border-slate-300 dark:border-slate-600 rounded focus:ring-teal-500"
+              onChange={handleLocationToggle}
+              checked={!!localFilters.lat}
+              disabled={locationLoading}
+              className="sr-only peer"
             />
-            <label htmlFor="isVerified" className={checkboxLabelClass}>
-              Verified Taskers Only
-            </label>
+            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 dark:peer-focus:ring-teal-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-teal-600"></div>
+            <span className="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center">
+              {locationLoading ? (
+                <span className="animate-pulse">Locating...</span>
+              ) : (
+                <>
+                  <FaLocationArrow className="mr-1.5 text-teal-500" /> Sort by Nearest
+                </>
+              )}
+            </span>
+          </label>
+          {localFilters.lat && (
+            <p className="text-xs text-teal-600 dark:text-teal-400 mt-1 ml-14">
+              Location set ({localFilters.lat.toFixed(2)}, {localFilters.lng.toFixed(2)})
+            </p>
+          )}
+        </div>
+
+        {/* Verified Provider Check */}
+        <div className="flex items-center pt-2">
+          <input
+            type="checkbox"
+            id="isVerified"
+            name="isVerified"
+            checked={!!localFilters.isVerified}
+            onChange={handleChange}
+            className="h-4 w-4 text-teal-600 border-slate-300 dark:border-slate-600 rounded focus:ring-teal-500"
+          />
+          <label htmlFor="isVerified" className={checkboxLabelClass}>
+            Verified Taskers Only
+          </label>
         </div>
 
         {/* Action Buttons */}
         <div className='pt-4 space-y-3'>
-            <button
-              type="submit"
-              className="w-full py-2.5 px-4 bg-teal-600 text-white font-semibold rounded-lg shadow-sm hover:bg-teal-700 transition duration-300"
-            >
-              Apply Filters
-            </button>
-             <button
-              type="button"
-              onClick={handleClear}
-              className="w-full py-2.5 px-4 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-semibold rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition duration-300"
-            >
-              Clear Filters
-            </button>
+          <button
+            type="submit"
+            className="w-full py-2.5 px-4 bg-teal-600 text-white font-semibold rounded-lg shadow-sm hover:bg-teal-700 transition duration-300"
+          >
+            Apply Filters
+          </button>
+          <button
+            type="button"
+            onClick={handleClear}
+            className="w-full py-2.5 px-4 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-semibold rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition duration-300"
+          >
+            Clear Filters
+          </button>
         </div>
 
-      </form>
-    </div>
+      </form >
+    </div >
   );
 };
 

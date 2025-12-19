@@ -30,36 +30,29 @@ const userSchema = mongoose.Schema(
       type: String,
     },
     // --- Address Fields (Standardized for Location) ---
+    // Note: Kept for backward compatibility and specific address details
     address: {
-      // House name/number/flat number
-      house_name: {
-        type: String,
-        trim: true,
-      },
-      // Street, Locality, or Village
-      street_address: {
-        type: String,
-        trim: true,
-      },
-      // City or District
-      city_district: {
-        type: String,
-        trim: true,
-      },
-      // State (e.g., Kerala)
-      state: {
-        type: String,
-        trim: true,
-      },
-      // 6-digit Pincode (kept as string for flexibility)
-      pincode: {
-        type: String,
-        trim: true,
-      },
+      house_name: { type: String, trim: true },
+      street_address: { type: String, trim: true },
+      city_district: { type: String, trim: true },
+      state: { type: String, trim: true },
+      pincode: { type: String, trim: true },
     },
-    // ------------------------------------------------------------------
-    // GEO-SEARCH REMOVAL: The entire 'location' field is removed.
-    // ------------------------------------------------------------------
+
+    // --- GeoJSON Location ---
+    location: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+      },
+      coordinates: {
+        type: [Number], // [longitude, latitude]
+        index: '2dsphere',
+        default: [0, 0],
+      },
+      formattedAddress: String, // Google's full address string
+    },
     ratingAvg: {
       type: Number,
       default: 0,

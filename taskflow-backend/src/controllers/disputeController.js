@@ -44,8 +44,15 @@ const createDispute = asyncHandler(async (req, res) => {
  */
 const getDisputes = asyncHandler(async (req, res) => {
     const disputes = await Dispute.find({})
-        .populate('raisedBy', 'name email')
-        .populate('providerId', 'businessName')
+        .populate('raisedBy', 'name email phone')
+        .populate({
+            path: 'providerId',
+            select: 'businessName userId',
+            populate: {
+                path: 'userId',
+                select: 'name email phone'
+            }
+        })
         .populate('bookingId')
         .sort({ createdAt: -1 });
 

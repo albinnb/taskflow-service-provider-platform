@@ -7,7 +7,7 @@ import { generateToken } from '../utils/jwt.js';
 // @route POST /api/auth/register
 // @access Public
 const registerUser = asyncHandler(async (req, res) => {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, phone } = req.body;
 
     console.log('Registration attempt for:', email);
 
@@ -24,6 +24,7 @@ const registerUser = asyncHandler(async (req, res) => {
         email,
         passwordHash: password, // Mongoose pre-save hook handles hashing
         role: role || 'customer',
+        phone,
     });
 
     console.log('User created successfully:', user._id, user.email);

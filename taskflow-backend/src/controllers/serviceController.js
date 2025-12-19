@@ -12,6 +12,29 @@ import Category from '../models/Category.js'; // Import Category
  * @desc Get all services with search, filter, and sort (Geo-Search removed)
  * @access Public
  */
+// Helper to calculate distance (in km) between two coordinates
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+    var R = 6371; // Radius of the earth in km
+    var dLat = deg2rad(lat2 - lat1);
+    var dLon = deg2rad(lon2 - lon1);
+    var a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    var d = R * c; // Distance in km
+    return d;
+}
+
+function deg2rad(deg) {
+    return deg * (Math.PI / 180);
+}
+
+/**
+ * @route GET /api/services
+ * @desc Get all services with search, filter, and sort (Geo-Search enabled)
+ * @access Public
+ */
 const getServices = asyncHandler(async (req, res) => {
 
     // FIX: Resolve category slug to ID if present
@@ -20,47 +43,126 @@ const getServices = asyncHandler(async (req, res) => {
         if (categoryDoc) {
             req.query.category = categoryDoc._id; // Use ID for querying
         } else {
-            // If category slug not found, we should probably return empty results or ignore
-            // Let's force a non-matching query since the user asked for a specific non-existent category
             req.query.category = new mongoose.Types.ObjectId();
         }
     }
 
-    // 1. Build the filter object first (only search and filter remain)
-    const filterBuilder = new ApiFeatures(Service.find(), req.query)
-        .search()
-        .filter();
-    // GEO-SEARCH REMOVAL: Removed .geoSearch()
+    // GEO-SEARCH LOGIC
+    const { lat, lng } = req.query;
 
-    // Get the final merged filter object
-    const finalFilter = filterBuilder.getQuery();
+    if (lat && lng) {
+        // 1. Find Providers near the location
+        // Using aggregation to calculate specific distance for each
+        const providers = await Provider.aggregate([
+            {
+                $geoNear: {
+                    near: { type: "Point", coordinates: [parseFloat(lng), parseFloat(lat)] },
+                    distanceField: "dist.calculated", // Output field
+                    maxDistance: 50000, // 50km radius (optional hard limit)
+                    spherical: true,
+                    distanceMultiplier: 0.001 // Convert meters to km
+                }
+            }
+        ]);
 
-    // Default: Only show approved services unless explicitly disabled (e.g. by admin endpoint usage, though that's separate)
-    // Actually, for public search, we ALWAYS enforce approved.
-    finalFilter.approvalStatus = 'approved';
+        if (providers.length === 0) {
+            return res.status(200).json({
+                success: true,
+                count: 0,
+                total: 0,
+                data: []
+            });
+        }
 
-    // 2. Use standard count for non-geo queries
-    const totalCount = await Service.countDocuments(finalFilter);
+        // Map provider IDs to their distance
+        const providerDistanceMap = {};
+        providers.forEach(p => {
+            providerDistanceMap[p._id.toString()] = p.dist.calculated;
+        });
 
-    // 3. Execute the main query using the final filter and remaining methods
-    const features = new ApiFeatures(
-        Service.find(finalFilter).populate('providerId', 'businessName ratingAvg'),
-        req.query
-    )
-        .sort()
-        .limitFields()
-        .paginate();
+        const providerIds = providers.map(p => p._id);
 
-    // Execute the query
-    const services = await features.query.lean();
+        // 2. Build Service Query
+        // We inject the providerIds into the query
+        const queryObj = { ...req.query, providerId: { $in: providerIds } };
+        // Remove lat/lng so ApiFeatures doesn't choke on them or try to filter Service with them
+        delete queryObj.lat;
+        delete queryObj.lng;
 
-    res.status(200).json({
-        success: true,
-        count: services.length,
-        total: totalCount,
-        pagination: features.pagination,
-        data: services,
-    });
+        // Use ApiFeatures for text search and category filtering and field limiting
+        // WARN: We cannot use ApiFeatures for pagination/sorting because we need to sort by distance first
+        const filterBuilder = new ApiFeatures(
+            Service.find().populate('providerId', 'businessName ratingAvg location address'),
+            queryObj
+        )
+            .search()
+            .filter();
+        // .sort() -> We skip db sorting to sort by distance
+        // .paginate() -> We skip db pagination
+
+        // Force approved only
+        filterBuilder.query = filterBuilder.query.where('approvalStatus').equals('approved');
+
+        let services = await filterBuilder.query.lean();
+
+        // 3. Attach Distance and Sort
+        services = services.map(service => ({
+            ...service,
+            distance: providerDistanceMap[service.providerId._id.toString()] || 0
+        }));
+
+        services.sort((a, b) => a.distance - b.distance);
+
+        // 4. Manual Pagination
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 20;
+        const skip = (page - 1) * limit;
+        const totalCount = services.length;
+
+        const paginatedServices = services.slice(skip, skip + limit);
+
+        return res.status(200).json({
+            success: true,
+            count: paginatedServices.length,
+            total: totalCount,
+            pagination: { page, limit, totalPages: Math.ceil(totalCount / limit) },
+            data: paginatedServices,
+        });
+
+    } else {
+        // --- STANDARD NON-GEO QUERY ---
+
+        // 1. Build the filter object first
+        const filterBuilder = new ApiFeatures(Service.find(), req.query)
+            .search()
+            .filter();
+
+        // Get the final merged filter object
+        const finalFilter = filterBuilder.getQuery();
+        finalFilter.approvalStatus = 'approved';
+
+        // 2. Use standard count
+        const totalCount = await Service.countDocuments(finalFilter);
+
+        // 3. Execute the main query
+        const features = new ApiFeatures(
+            Service.find(finalFilter).populate('providerId', 'businessName ratingAvg address'),
+            req.query
+        )
+            .sort()
+            .limitFields()
+            .paginate();
+
+        const services = await features.query.lean();
+
+        res.status(200).json({
+            success: true,
+            count: services.length,
+            total: totalCount,
+            pagination: features.pagination,
+            data: services,
+        });
+    }
 });
 
 

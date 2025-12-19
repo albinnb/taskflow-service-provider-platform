@@ -10,6 +10,8 @@ const TABS = {
     DISPUTES: 'disputes',
 };
 
+import DisputeDetailsModal from '../../components/admin/DisputeDetailsModal';
+
 /**
  * @desc Redesigned Admin Dashboard (with Dark Mode)
  * @access Private/Admin
@@ -18,6 +20,10 @@ const DashboardAdmin = () => {
     const [view, setView] = useState(TABS.USERS);
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // Dispute Modal State
+    const [selectedDispute, setSelectedDispute] = useState(null);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
     useEffect(() => {
         fetchData(view);
@@ -96,13 +102,24 @@ const DashboardAdmin = () => {
     };
 
     // --- Dispute Actions ---
-    const handleResolveDispute = async (disputeId, status) => {
+    const openDisputeDetails = (dispute) => {
+        setSelectedDispute(dispute);
+        setIsDetailsModalOpen(true);
+    };
+
+    const handleResolveDispute = async (disputeId, status, adminNotes = '') => {
         try {
-            await coreApi.resolveDispute(disputeId, { status });
-            toast.success(`Dispute marked as ${status}.`);
-            fetchData(TABS.DISPUTES); // Refresh list
+            await coreApi.resolveDispute(disputeId, { status, adminNotes });
+            toast.success(`Dispute status updated to ${status}.`);
+
+            // Close modal if open
+            setIsDetailsModalOpen(false);
+            setSelectedDispute(null);
+
+            // Refresh list
+            fetchData(TABS.DISPUTES);
         } catch (error) {
-            toast.error('Failed to resolve dispute.');
+            toast.error('Failed to update dispute status.');
         }
     };
 
@@ -210,9 +227,9 @@ const DashboardAdmin = () => {
                                 <div>
                                     <div className="flex items-center space-x-2 mb-2">
                                         <span className={`px-2 py-0.5 text-xs font-bold rounded uppercase ${d.status === 'open' ? 'bg-red-100 text-red-800' :
-                                                d.status === 'resolved' ? 'bg-green-100 text-green-800' :
-                                                    d.status === 'refunded' ? 'bg-blue-100 text-blue-800' :
-                                                        'bg-slate-100 text-slate-800'
+                                            d.status === 'resolved' ? 'bg-green-100 text-green-800' :
+                                                d.status === 'refunded' ? 'bg-blue-100 text-blue-800' :
+                                                    'bg-slate-100 text-slate-800'
                                             }`}>{d.status}</span>
                                         <span className="text-sm text-slate-500">Booking ID: {d.bookingId?._id || 'N/A'}</span>
                                     </div>
@@ -221,28 +238,12 @@ const DashboardAdmin = () => {
                                     <p className="text-sm text-slate-600">Provider: {d.providerId?.businessName || 'Unknown Provider'}</p>
                                 </div>
                                 <div className="flex flex-col space-y-2">
-                                    {d.status === 'open' && (
-                                        <>
-                                            <button
-                                                onClick={() => handleResolveDispute(d._id, 'resolved')}
-                                                className="px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700"
-                                            >
-                                                Mark Resolved
-                                            </button>
-                                            <button
-                                                onClick={() => handleResolveDispute(d._id, 'refunded')}
-                                                className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                                            >
-                                                Issue Refund
-                                            </button>
-                                            <button
-                                                onClick={() => handleResolveDispute(d._id, 'rejected')}
-                                                className="px-3 py-1.5 bg-slate-600 text-white text-sm rounded hover:bg-slate-700"
-                                            >
-                                                Reject/Close
-                                            </button>
-                                        </>
-                                    )}
+                                    <button
+                                        onClick={() => openDisputeDetails(d)}
+                                        className="px-4 py-2 bg-slate-800 dark:bg-slate-700 text-white text-sm font-semibold rounded-lg hover:bg-slate-700 dark:hover:bg-slate-600 transition shadow-sm"
+                                    >
+                                        View & Investigate
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -305,6 +306,13 @@ const DashboardAdmin = () => {
                 border-color: #2dd4bf; /* Teal-400 */
               }
             `}</style>
+            {/* Dispute Investigation Modal */}
+            <DisputeDetailsModal
+                isOpen={isDetailsModalOpen}
+                onClose={() => setIsDetailsModalOpen(false)}
+                dispute={selectedDispute}
+                onUpdateStatus={handleResolveDispute}
+            />
         </div>
     );
 };

@@ -40,7 +40,12 @@ const ServiceCard = ({ service }) => {
           <div className="flex items-center space-x-4 text-sm text-slate-600 dark:text-slate-300 mb-4">
             <p className="flex items-center">
               <FaMapMarkerAlt className="w-4 h-4 mr-1.5 text-teal-600 dark:text-teal-400" />
-              {provider.address?.city || 'Location Unknown'}
+              {service.distance ? (
+                <span className="font-semibold text-teal-700 dark:text-teal-300 mr-1">
+                  {service.distance.toFixed(1)} km from you •
+                </span>
+              ) : null}
+              {provider.address?.city_district || provider.address?.city || 'Location Unknown'}
             </p>
             <p className="flex items-center">
               <FaStar className="w-4 h-4 mr-1.5 text-yellow-500" />

@@ -44,40 +44,125 @@ const categoryData = [
 // --------------------------------------------------------------------------
 const usersData = [
   // --- ADMIN ---
-  { name: 'Admin User', email: 'admin@gmail.com', role: 'admin', password: 'password123', address: { house_name: 'Admin HQ', street_address: 'Central Ave', city_district: 'New Delhi', state: 'Delhi', pincode: '110001' } },
+  {
+    name: 'Admin User', email: 'admin@gmail.com', role: 'admin', password: 'password123',
+    address: { house_name: 'Admin HQ', street_address: 'Central Ave', city_district: 'New Delhi', state: 'Delhi', pincode: '110001' },
+    location: { type: 'Point', coordinates: [77.2090, 28.6139], formattedAddress: 'Central Ave, New Delhi, Delhi, India' }
+  },
 
   // --- PROVIDERS (10) ---
-  // Cleaning (2)
-  { name: 'Sarah Clean', email: 'sarah.cleaner@gmail.com', role: 'provider', password: 'password123', address: { house_name: 'Villa 1', street_address: 'Clean St', city_district: 'Kochi', state: 'Kerala', pincode: '682001' } },
-  { name: 'Green Clean Co', email: 'greenclean@gmail.com', role: 'provider', password: 'password123', address: { house_name: 'Office 202', street_address: 'Eco Road', city_district: 'Trivandrum', state: 'Kerala', pincode: '695001' } },
+  // Cleaning (2) - Kochi
+  {
+    name: 'Sarah Clean', email: 'sarah.cleaner@gmail.com', role: 'provider', password: 'password123',
+    address: { house_name: 'Villa 1', street_address: 'Clean St', city_district: 'Kochi', state: 'Kerala', pincode: '682001' },
+    location: { type: 'Point', coordinates: [76.2673, 9.9312], formattedAddress: 'Clean St, Kochi, Kerala, India' }
+  },
+  {
+    name: 'Green Clean Co', email: 'greenclean@gmail.com', role: 'provider', password: 'password123',
+    address: { house_name: 'Office 202', street_address: 'Eco Road', city_district: 'Trivandrum', state: 'Kerala', pincode: '695001' },
+    location: { type: 'Point', coordinates: [76.9366, 8.5241], formattedAddress: 'Eco Road, Trivandrum, Kerala, India' }
+  },
 
-  // Fitness (2)
-  { name: 'Rahul Fit', email: 'rahul.fitness@gmail.com', role: 'provider', password: 'password123', address: { house_name: 'Gym House', street_address: 'Fit Lane', city_district: 'Bangalore', state: 'Karnataka', pincode: '560001' } },
-  { name: 'Yoga with Priya', email: 'priya.yoga@gmail.com', role: 'provider', password: 'password123', address: { house_name: 'Studio 5', street_address: 'Peace Ave', city_district: 'Mysore', state: 'Karnataka', pincode: '570001' } },
+  // Fitness (2) - Bangalore
+  {
+    name: 'Rahul Fit', email: 'rahul.fitness@gmail.com', role: 'provider', password: 'password123',
+    address: { house_name: 'Gym House', street_address: 'Fit Lane', city_district: 'Bangalore', state: 'Karnataka', pincode: '560001' },
+    location: { type: 'Point', coordinates: [77.5946, 12.9716], formattedAddress: 'Fit Lane, Bangalore, Karnataka, India' }
+  },
+  {
+    name: 'Yoga with Priya', email: 'priya.yoga@gmail.com', role: 'provider', password: 'password123',
+    address: { house_name: 'Studio 5', street_address: 'Peace Ave', city_district: 'Mysore', state: 'Karnataka', pincode: '570001' },
+    location: { type: 'Point', coordinates: [76.6394, 12.2958], formattedAddress: 'Peace Ave, Mysore, Karnataka, India' }
+  },
 
-  // IT Repair (2)
-  { name: 'Tech Fixer', email: 'tech.fixer@gmail.com', role: 'provider', password: 'password123', address: { house_name: 'Shop 10', street_address: 'Digital Park', city_district: 'Bangalore', state: 'Karnataka', pincode: '560002' } },
-  { name: 'Laptop Medic', email: 'laptop.medic@gmail.com', role: 'provider', password: 'password123', address: { house_name: 'Zone 4', street_address: 'Cyber City', city_district: 'Hyderabad', state: 'Telangana', pincode: '500001' } },
+  // IT Repair (2) - Bangalore & Hyderabad
+  {
+    name: 'Tech Fixer', email: 'tech.fixer@gmail.com', role: 'provider', password: 'password123',
+    address: { house_name: 'Shop 10', street_address: 'Digital Park', city_district: 'Bangalore', state: 'Karnataka', pincode: '560002' },
+    location: { type: 'Point', coordinates: [77.6346, 12.9316], formattedAddress: 'Digital Park, Bangalore, Karnataka, India' } // Slightly offset from Rahul Fit
+  },
+  {
+    name: 'Laptop Medic', email: 'laptop.medic@gmail.com', role: 'provider', password: 'password123',
+    address: { house_name: 'Zone 4', street_address: 'Cyber City', city_district: 'Hyderabad', state: 'Telangana', pincode: '500001' },
+    location: { type: 'Point', coordinates: [78.4867, 17.3850], formattedAddress: 'Cyber City, Hyderabad, Telangana, India' }
+  },
 
-  // Plumbing (2)
-  { name: 'Joe Plumber', email: 'joe.plumber@gmail.com', role: 'provider', password: 'password123', address: { house_name: 'H-99', street_address: 'Water Works', city_district: 'Chennai', state: 'Tamil Nadu', pincode: '600001' } },
-  { name: 'City Plumbers', email: 'city.plumbers@gmail.com', role: 'provider', password: 'password123', address: { house_name: 'Depot 5', street_address: 'Main Pipe Rd', city_district: 'Coimbatore', state: 'Tamil Nadu', pincode: '641001' } },
+  // Plumbing (2) - Chennai & Coimbatore
+  {
+    name: 'Joe Plumber', email: 'joe.plumber@gmail.com', role: 'provider', password: 'password123',
+    address: { house_name: 'H-99', street_address: 'Water Works', city_district: 'Chennai', state: 'Tamil Nadu', pincode: '600001' },
+    location: { type: 'Point', coordinates: [80.2707, 13.0827], formattedAddress: 'Water Works, Chennai, Tamil Nadu, India' }
+  },
+  {
+    name: 'City Plumbers', email: 'city.plumbers@gmail.com', role: 'provider', password: 'password123',
+    address: { house_name: 'Depot 5', street_address: 'Main Pipe Rd', city_district: 'Coimbatore', state: 'Tamil Nadu', pincode: '641001' },
+    location: { type: 'Point', coordinates: [76.9558, 11.0168], formattedAddress: 'Main Pipe Rd, Coimbatore, Tamil Nadu, India' }
+  },
 
-  // Electrical (2)
-  { name: 'Max Electric', email: 'max.electric@gmail.com', role: 'provider', password: 'password123', address: { house_name: 'Power House', street_address: 'Volt Lane', city_district: 'Mumbai', state: 'Maharashtra', pincode: '400001' } },
-  { name: 'Bright Sparks', email: 'bright.sparks@gmail.com', role: 'provider', password: 'password123', address: { house_name: 'Unit 7', street_address: 'Current St', city_district: 'Pune', state: 'Maharashtra', pincode: '411001' } },
+  // Electrical (2) - Mumbai & Pune
+  {
+    name: 'Max Electric', email: 'max.electric@gmail.com', role: 'provider', password: 'password123',
+    address: { house_name: 'Power House', street_address: 'Volt Lane', city_district: 'Mumbai', state: 'Maharashtra', pincode: '400001' },
+    location: { type: 'Point', coordinates: [72.8777, 19.0760], formattedAddress: 'Volt Lane, Mumbai, Maharashtra, India' }
+  },
+  {
+    name: 'Bright Sparks', email: 'bright.sparks@gmail.com', role: 'provider', password: 'password123',
+    address: { house_name: 'Unit 7', street_address: 'Current St', city_district: 'Pune', state: 'Maharashtra', pincode: '411001' },
+    location: { type: 'Point', coordinates: [73.8567, 18.5204], formattedAddress: 'Current St, Pune, Maharashtra, India' }
+  },
 
   // --- CUSTOMERS (10) ---
-  { name: 'Arjun Das', email: 'arjun.das@gmail.com', role: 'customer', password: 'password123', address: { house_name: 'Apt 101', street_address: 'MG Road', city_district: 'Kochi', state: 'Kerala', pincode: '682001' } },
-  { name: 'Sneha P', email: 'sneha.p@gmail.com', role: 'customer', password: 'password123', address: { house_name: 'Villa 5', street_address: 'Palm Grove', city_district: 'Bangalore', state: 'Karnataka', pincode: '560001' } },
-  { name: 'Rohan K', email: 'rohan.k@gmail.com', role: 'customer', password: 'password123', address: { house_name: 'Flat 4B', street_address: 'Lake View', city_district: 'Chennai', state: 'Tamil Nadu', pincode: '600001' } },
-  { name: 'Anjali M', email: 'anjali.m@gmail.com', role: 'customer', password: 'password123', address: { house_name: 'House 22', street_address: 'Garden St', city_district: 'Mumbai', state: 'Maharashtra', pincode: '400001' } },
-  { name: 'Vikram S', email: 'vikram.s@gmail.com', role: 'customer', password: 'password123', address: { house_name: 'C-Block', street_address: 'Tech Park', city_district: 'Hyderabad', state: 'Telangana', pincode: '500001' } },
-  { name: 'Meera R', email: 'meera.r@gmail.com', role: 'customer', password: 'password123', address: { house_name: 'No 7', street_address: 'Temple Rd', city_district: 'Trivandrum', state: 'Kerala', pincode: '695001' } },
-  { name: 'David J', email: 'david.j@gmail.com', role: 'customer', password: 'password123', address: { house_name: 'Plot 45', street_address: 'Residency Rd', city_district: 'Bangalore', state: 'Karnataka', pincode: '560002' } },
-  { name: 'Fatima Z', email: 'fatima.z@gmail.com', role: 'customer', password: 'password123', address: { house_name: 'Floor 2', street_address: 'Beach Rd', city_district: 'Kozhikode', state: 'Kerala', pincode: '673001' } },
-  { name: 'Karthik N', email: 'karthik.n@gmail.com', role: 'customer', password: 'password123', address: { house_name: 'Tower A', street_address: 'Skyline', city_district: 'Kochi', state: 'Kerala', pincode: '682002' } },
-  { name: 'Pooja Iyer', email: 'pooja.iyer@gmail.com', role: 'customer', password: 'password123', address: { house_name: 'Old House', street_address: 'Heritage Ln', city_district: 'Mysore', state: 'Karnataka', pincode: '570001' } },
+  // Distributed to test distance
+  {
+    name: 'Arjun Das', email: 'arjun.das@gmail.com', role: 'customer', password: 'password123',
+    address: { house_name: 'Apt 101', street_address: 'MG Road', city_district: 'Kochi', state: 'Kerala', pincode: '682001' },
+    location: { type: 'Point', coordinates: [76.2711, 9.9320], formattedAddress: 'MG Road, Kochi, Kerala, India' } // Near Sarah Clean
+  },
+  {
+    name: 'Sneha P', email: 'sneha.p@gmail.com', role: 'customer', password: 'password123',
+    address: { house_name: 'Villa 5', street_address: 'Palm Grove', city_district: 'Bangalore', state: 'Karnataka', pincode: '560001' },
+    location: { type: 'Point', coordinates: [77.5900, 12.9700], formattedAddress: 'Palm Grove, Bangalore, Karnataka, India' } // Near Rahul Fit
+  },
+  {
+    name: 'Rohan K', email: 'rohan.k@gmail.com', role: 'customer', password: 'password123',
+    address: { house_name: 'Flat 4B', street_address: 'Lake View', city_district: 'Chennai', state: 'Tamil Nadu', pincode: '600001' },
+    location: { type: 'Point', coordinates: [80.2700, 13.0800], formattedAddress: 'Lake View, Chennai, Tamil Nadu, India' }
+  },
+  {
+    name: 'Anjali M', email: 'anjali.m@gmail.com', role: 'customer', password: 'password123',
+    address: { house_name: 'House 22', street_address: 'Garden St', city_district: 'Mumbai', state: 'Maharashtra', pincode: '400001' },
+    location: { type: 'Point', coordinates: [72.8700, 19.0700], formattedAddress: 'Garden St, Mumbai, Maharashtra, India' }
+  },
+  {
+    name: 'Vikram S', email: 'vikram.s@gmail.com', role: 'customer', password: 'password123',
+    address: { house_name: 'C-Block', street_address: 'Tech Park', city_district: 'Hyderabad', state: 'Telangana', pincode: '500001' },
+    location: { type: 'Point', coordinates: [78.4800, 17.3800], formattedAddress: 'Tech Park, Hyderabad, Telengana, India' }
+  },
+  {
+    name: 'Meera R', email: 'meera.r@gmail.com', role: 'customer', password: 'password123',
+    address: { house_name: 'No 7', street_address: 'Temple Rd', city_district: 'Trivandrum', state: 'Kerala', pincode: '695001' },
+    location: { type: 'Point', coordinates: [76.9300, 8.5200], formattedAddress: 'Temple Rd, Trivandrum, Kerala, India' }
+  },
+  {
+    name: 'David J', email: 'david.j@gmail.com', role: 'customer', password: 'password123',
+    address: { house_name: 'Plot 45', street_address: 'Residency Rd', city_district: 'Bangalore', state: 'Karnataka', pincode: '560002' },
+    location: { type: 'Point', coordinates: [77.6200, 12.9300], formattedAddress: 'Residency Rd, Bangalore, Karnataka, India' } // Near Tech Fixer
+  },
+  {
+    name: 'Fatima Z', email: 'fatima.z@gmail.com', role: 'customer', password: 'password123',
+    address: { house_name: 'Floor 2', street_address: 'Beach Rd', city_district: 'Kozhikode', state: 'Kerala', pincode: '673001' },
+    location: { type: 'Point', coordinates: [75.7804, 11.2588], formattedAddress: 'Beach Rd, Kozhikode, Kerala, India' }
+  },
+  {
+    name: 'Karthik N', email: 'karthik.n@gmail.com', role: 'customer', password: 'password123',
+    address: { house_name: 'Tower A', street_address: 'Skyline', city_district: 'Kochi', state: 'Kerala', pincode: '682002' },
+    location: { type: 'Point', coordinates: [76.2800, 9.9400], formattedAddress: 'Skyline, Kochi, Kerala, India' }
+  },
+  {
+    name: 'Pooja Iyer', email: 'pooja.iyer@gmail.com', role: 'customer', password: 'password123',
+    address: { house_name: 'Old House', street_address: 'Heritage Ln', city_district: 'Mysore', state: 'Karnataka', pincode: '570001' },
+    location: { type: 'Point', coordinates: [76.6300, 12.2900], formattedAddress: 'Heritage Ln, Mysore, Karnataka, India' }
+  },
 ];
 
 const buildDefaultAvailability = () => ({
@@ -121,6 +206,7 @@ const getProviderDetails = (user, index, categories) => {
     categories: [catId],
     isVerified: true,
     address: user.address,
+    location: user.location, // Inject the location from the user object
     availability: buildDefaultAvailability(),
     ratingAvg: 0, // Will be updated later
     reviewCount: 0
@@ -289,7 +375,8 @@ const importData = async () => {
           category: req.category._id,
           price: req.price,
           durationMinutes: req.duration,
-          isActive: true
+          isActive: true,
+          approvalStatus: 'approved'
         });
       }
       dbServices.push(sc);

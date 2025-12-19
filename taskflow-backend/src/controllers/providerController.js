@@ -94,6 +94,7 @@ const createProviderProfile = asyncHandler(async (req, res) => {
 	await User.findByIdAndUpdate(req.user._id, {
 		location: provider.location,
 		address: provider.address,
+		phone: req.body.phone || undefined, // Sync phone if provided
 	});
 
 	res.status(201).json({ success: true, message: 'Provider profile created/updated successfully.', data: provider });
@@ -133,11 +134,13 @@ const updateProviderProfile = asyncHandler(async (req, res) => {
 		{ new: true, runValidators: true }
 	);
 
-	if (updates.location || updates.address) {
-		await User.findByIdAndUpdate(updatedProvider.userId, {
-			location: updatedProvider.location,
-			address: updatedProvider.address,
-		});
+	if (updates.location || updates.address || updates.phone) {
+		const userUpdates = {};
+		if (updates.location) userUpdates.location = updatedProvider.location;
+		if (updates.address) userUpdates.address = updatedProvider.address;
+		if (updates.phone) userUpdates.phone = updates.phone;
+
+		await User.findByIdAndUpdate(updatedProvider.userId, userUpdates);
 	}
 
 	res.status(200).json({ success: true, data: updatedProvider });

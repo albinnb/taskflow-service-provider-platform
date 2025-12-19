@@ -80,7 +80,7 @@ const SearchResultsPage = () => {
 
 
     const handleFilterChange = (newFilters) => {
-        setFilters(prev => ({ ...prev, ...newFilters, page: 1 }));
+        setFilters({ ...newFilters, page: 1 });
     };
 
     const handlePagination = (newPage) => {

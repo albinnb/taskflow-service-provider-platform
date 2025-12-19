@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import useAuth from '../../hooks/useAuth';
 import { coreApi } from '../../api/serviceApi';
 import { toast } from 'react-toastify';
-import { FaUserCheck, FaBolt, FaListAlt, FaCalendarCheck, FaChartLine, FaTrash, FaEdit, FaPlusCircle, FaCog, FaStar } from 'react-icons/fa';
+import { FaUserCheck, FaBolt, FaListAlt, FaCalendarCheck, FaChartLine, FaTrash, FaEdit, FaPlusCircle, FaCog, FaStar, FaMapMarkerAlt } from 'react-icons/fa';
 import ServiceForm from '../../components/provider/ServiceForm';
 // *** THIS IS THE FIX ***
 // The file is in the same folder, so it should be './'
@@ -19,6 +19,24 @@ const TABS = {
 /**
  * @desc Redesigned Provider Dashboard (with Dark Mode)
  */
+// Helper to calculate distance
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+  var R = 6371; // Radius of the earth in km
+  var dLat = deg2rad(lat2 - lat1);
+  var dLon = deg2rad(lon2 - lon1);
+  var a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  var d = R * c; // Distance in km
+  return d;
+}
+
+function deg2rad(deg) {
+  return deg * (Math.PI / 180);
+}
+
 const DashboardProvider = () => {
   const { user, roleProfile, loadUser, isAuthenticated } = useAuth();
   const [bookings, setBookings] = useState([]);
@@ -141,6 +159,17 @@ const DashboardProvider = () => {
                 <p className='text-sm text-slate-500 dark:text-slate-400 flex items-center mt-1'>
                   <FaCalendarCheck className='mr-2 text-teal-600 dark:text-teal-400' /> {new Date(booking.scheduledAt).toLocaleString()}
                 </p>
+                {booking.userId?.location?.coordinates && roleProfile?.location?.coordinates && (
+                  <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mt-1 flex items-center">
+                    <FaMapMarkerAlt className="mr-1" />
+                    {getDistanceFromLatLonInKm(
+                      roleProfile.location.coordinates[1],
+                      roleProfile.location.coordinates[0],
+                      booking.userId.location.coordinates[1],
+                      booking.userId.location.coordinates[0]
+                    ).toFixed(1)} km away
+                  </p>
+                )}
                 <div className="mt-1">
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${booking.paymentStatus === 'paid'
                     ? 'bg-green-100 text-green-800 border border-green-200'

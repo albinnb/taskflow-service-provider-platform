@@ -112,6 +112,21 @@ const RegisterPage = () => {
             {errors.email && <p className={errorClass}>{errors.email.message}</p>}
           </div>
 
+          {/* Phone Input */}
+          <div>
+            <label htmlFor="phone" className={labelClass}>Phone Number</label>
+            <input
+              id="phone"
+              type="tel"
+              autoComplete="tel"
+              required
+              className={inputClass}
+              placeholder="Your phone number"
+              {...formRegister('phone', { required: 'Phone number is required', pattern: { value: /^[0-9+\s-]{10,}$/, message: "Invalid phone number" } })}
+            />
+            {errors.phone && <p className={errorClass}>{errors.phone.message}</p>}
+          </div>
+
           {/* Password Input */}
           <div>
             <label htmlFor="password" className={labelClass}>Password</label>

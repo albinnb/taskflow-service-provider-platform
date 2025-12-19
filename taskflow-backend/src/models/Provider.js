@@ -90,6 +90,21 @@ const providerSchema = new mongoose.Schema(
       pincode: { type: String, trim: true },
     },
 
+    // --- GeoJSON Location ---
+    location: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point',
+      },
+      coordinates: {
+        type: [Number], // [longitude, latitude]
+        index: '2dsphere',
+        default: [0, 0],
+      },
+      formattedAddress: String,
+    },
+
     isVerified: {
       type: Boolean,
       default: false, // Set to true by admin after review
