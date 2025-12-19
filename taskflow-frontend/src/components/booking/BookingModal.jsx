@@ -1,7 +1,7 @@
 import React, { useState, forwardRef, useMemo } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { FaCalendarAlt, FaClock, FaDollarSign, FaTimes, FaCreditCard, FaPencilAlt } from 'react-icons/fa';
+import { FaCalendarAlt, FaClock, FaDollarSign, FaTimes, FaCreditCard, FaPencilAlt, FaCheckCircle } from 'react-icons/fa';
 import { useForm } from 'react-hook-form';
 import useAuth from '../../hooks/useAuth';
 import { coreApi } from '../../api/serviceApi';
@@ -111,7 +111,7 @@ const BookingModal = ({ service, provider, onClose }) => {
     }, [watchedDuration]);
 
 
-    const handlePayment = async (formData) => {
+    const handleBookingRequest = async (formData) => {
         const finalDuration = formData.durationMinutes;
 
         if (!isAuthenticated) {
@@ -139,65 +139,14 @@ const BookingModal = ({ service, provider, onClose }) => {
         };
 
         try {
-            // 1. Create Razorpay Order
-            // Payment order now requires the final totalPrice
-            const orderRes = await coreApi.createPaymentOrder({
-                serviceId: service._id,
-                totalPrice: totalPrice,
-            });
-            const { order } = orderRes.data;
+            // New Flow: Create Booking (Pending) -> Provider Accepts -> Payment
+            await coreApi.createBooking(bookingData);
 
-            // 2. Open Razorpay Checkout
-            if (!window.Razorpay) {
-                toast.error("Razorpay SDK failed to load. Please check internet connection.");
-                return;
-            }
-
-            const options = {
-                key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_RhuzoD45nn8cUr", // Use Vite env variable
-                amount: order.amount,
-                currency: order.currency,
-                name: "TaskFlow",
-                description: `Booking for ${service.title}`,
-                order_id: order.id,
-                handler: async function (response) {
-                    // 3. Payment Success! Verify it on backend
-                    try {
-                        const verifyData = {
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature,
-                            bookingData: bookingData // Send the original booking data (includes duration/notes)
-                        };
-
-                        await coreApi.verifyPayment(verifyData);
-
-                        toast.success('Payment successful! Booking confirmed.');
-                        onClose();
-                    } catch (err) {
-                        toast.error('Payment verification failed. Please contact support.');
-                        console.error(err);
-                    }
-                },
-                prefill: {
-                    name: user?.name,
-                    email: user?.email,
-                    contact: user?.phone || ""
-                },
-                theme: {
-                    color: "#0d9488" // Teal-600
-                }
-            };
-
-            const rzp1 = new window.Razorpay(options);
-            rzp1.on('payment.failed', function (response) {
-                toast.error(`Payment failed: ${response.error.description}`);
-            });
-
-            rzp1.open();
+            toast.success('Booking requested! Waiting for provider approval.');
+            onClose();
 
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to initiate payment.');
+            toast.error(error.response?.data?.message || 'Failed to initiate booking.');
         }
     };
 
@@ -208,13 +157,13 @@ const BookingModal = ({ service, provider, onClose }) => {
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-lg w-full transform transition-all border border-slate-200 dark:border-slate-700">
 
                 <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Book {service.title}</h2>
+                    <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Request to Book {service.title}</h2>
                     <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors duration-300">
                         <FaTimes className="w-6 h-6" />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit(handlePayment)}> {/* Now uses React-Hook-Form's handleSubmit */}
+                <form onSubmit={handleSubmit(handleBookingRequest)}> {/* Now uses React-Hook-Form's handleSubmit */}
                     <div className="p-6 space-y-6">
 
                         {/* Display Hourly Rate */}
@@ -336,8 +285,8 @@ const BookingModal = ({ service, provider, onClose }) => {
                             disabled={isSubmitting || !selectedStartTime || !isAuthenticated || errors.notes}
                             className="px-6 py-3 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 disabled:opacity-50 transition duration-150 flex items-center"
                         >
-                            {isSubmitting ? 'Processing Payment...' : 'Pay & Book (Escrow)'}
-                            <FaCreditCard className='ml-2' />
+                            {isSubmitting ? 'Requesting...' : 'Request Booking'}
+                            <FaCheckCircle className='ml-2' />
                         </button>
                     </div>
                 </form>

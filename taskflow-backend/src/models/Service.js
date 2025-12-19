@@ -1,60 +1,62 @@
 import mongoose from 'mongoose';
 
 /**
- * @desc Service Schema: Specific service offered by a provider.
- */
+ * @desc Service Schema: Specific service offered by a provider.
+ */
 const serviceSchema = mongoose.Schema(
-  {
-    providerId: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: 'Provider',
-    },
-    title: {
-      type: String,
-      required: true,
-      trim: true,
-      text: true, // For full-text search
-    },
-    description: {
-      type: String,
-      required: true,
-      maxlength: 1000,
-      text: true, // For full-text search
-    },
-    category: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: 'Category',
-    },
-    price: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
-    durationMinutes: {
-      type: Number,
-      required: true,
-      min: 10,
-    },
-    images: [
-      {
-        url: String,
-        public_id: String,
-      },
-    ],
-    tags: [String], // e.g., ['express', 'premium', 'eco-friendly']
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
-    // ------------------------------------------------------------------
-    // GEO-SEARCH REMOVAL: The entire denormalized 'location' field is removed.
-    // ------------------------------------------------------------------
-  },
-  {
-    timestamps: true,
-  }
+    {
+        providerId: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true,
+            ref: 'Provider',
+        },
+        title: {
+            type: String,
+            required: true,
+            trim: true,
+            text: true, // For full-text search
+        },
+        description: {
+            type: String,
+            required: true,
+            maxlength: 1000,
+            text: true, // For full-text search
+        },
+        category: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true,
+            ref: 'Category',
+        },
+        price: {
+            type: Number,
+            required: true,
+            min: 0,
+        },
+        durationMinutes: {
+            type: Number,
+            required: true,
+            min: 10,
+        },
+        images: [
+            {
+                url: String,
+                public_id: String,
+            },
+        ],
+        tags: [String], // e.g., ['express', 'premium', 'eco-friendly']
+        isActive: {
+            type: Boolean,
+            default: true,
+        },
+        approvalStatus: {
+            type: String,
+            enum: ['pending', 'approved', 'rejected'],
+            default: 'pending',
+        },
+    },
+    {
+        timestamps: true,
+    }
 );
 
 // Compound index for full-text search across multiple fields

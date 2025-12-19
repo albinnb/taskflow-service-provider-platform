@@ -39,7 +39,7 @@ const registerUser = asyncHandler(async (req, res) => {
                 address: user.address,
             });
         }
-        
+
         // Check if address fields are complete to determine onboarding status
         const isProfileComplete = user.isAddressComplete();
 
@@ -83,6 +83,11 @@ const authUser = asyncHandler(async (req, res) => {
         throw new Error('Invalid email or password');
     }
 
+    if (user.isBanned) {
+        res.status(403);
+        throw new Error('Your account has been suspended. Please contact support.');
+    }
+
     // Try to match the password
     const isPasswordMatch = await user.matchPassword(password);
     console.log('Password match result:', isPasswordMatch);
@@ -114,7 +119,7 @@ const authUser = asyncHandler(async (req, res) => {
 // @access Private
 const getMe = asyncHandler(async (req, res) => {
     // req.user is set by the protect middleware, which only fetches essential fields
-    
+
     // Fetch the full user object including address fields (for isProfileComplete check)
     const user = await User.findById(req.user._id);
 

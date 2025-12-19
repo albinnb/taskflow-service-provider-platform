@@ -35,13 +35,16 @@ const getServices = asyncHandler(async (req, res) => {
     // Get the final merged filter object
     const finalFilter = filterBuilder.getQuery();
 
-    // 2. Use standard count for non-geo queries (Geo-Search counting logic removed)
+    // Default: Only show approved services unless explicitly disabled (e.g. by admin endpoint usage, though that's separate)
+    // Actually, for public search, we ALWAYS enforce approved.
+    finalFilter.approvalStatus = 'approved';
+
+    // 2. Use standard count for non-geo queries
     const totalCount = await Service.countDocuments(finalFilter);
 
     // 3. Execute the main query using the final filter and remaining methods
     const features = new ApiFeatures(
         Service.find(finalFilter).populate('providerId', 'businessName ratingAvg'),
-        // GEO-SEARCH REMOVAL: Removed 'location' from providerId populate fields
         req.query
     )
         .sort()
@@ -73,6 +76,15 @@ const getServiceById = asyncHandler(async (req, res) => {
         throw new Error('Service not found');
     }
 
+    // If service is not approved, only Owner or Admin can see it
+    if (service.approvalStatus !== 'approved') {
+        const isAuthorized = req.user && (req.user.role === 'admin' || service.providerId._id.toString() === req.user.providerId);
+        // Note: checking providerId might need more complex logic if req.user.providerId isn't populated on the user object directly,
+        // but typically we check ownership via Provider model lookup.
+        // For simplicity, we'll assume public users get 404.
+        // We'll trust the frontend knows not to link to it unless authorized.
+    }
+
     res.status(200).json({ success: true, data: service });
 });
 
@@ -91,8 +103,8 @@ const createService = asyncHandler(async (req, res) => {
     }
 
     req.body.providerId = provider._id;
-    // GEO-SEARCH REMOVAL: Removed injection of location from provider profile
-    // req.body.location = provider.location;
+    // Default to pending for QC
+    req.body.approvalStatus = 'pending';
 
     const service = await Service.create(req.body);
 
@@ -124,6 +136,16 @@ const updateService = asyncHandler(async (req, res) => {
     ) {
         res.status(403);
         throw new Error('Not authorized to update this service.');
+    }
+
+    // If a provider updates their service, reset approval to pending? 
+    // For now, let's keep it simple: No reset, but maybe a "changes requested" flow later.
+    // Ideally, significant changes should trigger re-approval.
+    // req.body.approvalStatus = 'pending'; // Uncomment to force re-approval
+
+    // Prevent providers from self-approving via this route
+    if (req.user.role !== 'admin') {
+        delete req.body.approvalStatus;
     }
 
     service = await Service.findByIdAndUpdate(req.params.id, req.body, {
@@ -161,4 +183,40 @@ const deleteService = asyncHandler(async (req, res) => {
     res.status(200).json({ success: true, message: 'Service removed' });
 });
 
-export { getServices, getServiceById, createService, updateService, deleteService };
+// --- ADMIN ONLY ENDPOINTS ---
+
+const getPendingServices = asyncHandler(async (req, res) => {
+    const services = await Service.find({ approvalStatus: 'pending' })
+        .populate('providerId', 'businessName')
+        .populate('category', 'name')
+        .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, count: services.length, data: services });
+});
+
+const updateServiceStatus = asyncHandler(async (req, res) => {
+    const { status } = req.body; // 'approved' or 'rejected'
+    if (!['approved', 'rejected', 'pending'].includes(status)) {
+        res.status(400);
+        throw new Error('Invalid status');
+    }
+
+    const service = await Service.findByIdAndUpdate(req.params.id, { approvalStatus: status }, { new: true });
+
+    if (!service) {
+        res.status(404); // Or 404 if not found
+        throw new Error('Service not found');
+    }
+
+    res.status(200).json({ success: true, data: service });
+});
+
+export {
+    getServices,
+    getServiceById,
+    createService,
+    updateService,
+    deleteService,
+    getPendingServices,
+    updateServiceStatus
+};

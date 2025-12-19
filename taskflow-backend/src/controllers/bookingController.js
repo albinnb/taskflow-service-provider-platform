@@ -147,8 +147,11 @@ const getBookings = asyncHandler(async (req, res) => {
 const getBookingById = asyncHandler(async (req, res) => {
     const booking = await Booking.findById(req.params.id)
         .populate('serviceId')
-        .populate('userId', 'name email phone')
-        .populate('providerId', 'businessName')
+        .populate('userId', 'name email phone') // Populates customer details
+        .populate({
+            path: 'providerId',
+            select: 'businessName userId' // Populates provider details AND their linked userId
+        })
         .lean();
 
     if (!booking) {
@@ -157,13 +160,12 @@ const getBookingById = asyncHandler(async (req, res) => {
     }
 
     // Authorization check: Must be the customer, provider, or admin
-    const provider = await Provider.findById(booking.providerId);
-    const isAuthorized =
-        req.user._id.toString() === booking.userId.toString() || // Customer
-        req.user._id.toString() === provider.userId.toString() || // Provider
-        req.user.role === 'admin';
+    // Note: Since we populated, userId and providerId are Objects, not IDs.
+    const isCustomer = booking.userId._id.toString() === req.user._id.toString();
+    const isProvider = booking.providerId.userId.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === 'admin';
 
-    if (!isAuthorized) {
+    if (!isCustomer && !isProvider && !isAdmin) {
         res.status(403);
         throw new Error('Not authorized to view this booking.');
     }
@@ -494,11 +496,8 @@ const updateBookingStatus = asyncHandler(async (req, res) => {
         throw new Error('Not authorized to update this booking status.');
     }
 
-    // Protection against unauthorized completion via this general route
-    if (status === 'completed' && req.user.role !== 'admin') {
-        res.status(403);
-        throw new Error('Use the dedicated /complete endpoint to finalize the booking.');
-    }
+    // Protection removed to allow providers to complete bookings
+    // if (status === 'completed' && req.user.role !== 'admin') { ... }
 
     // Update status and paymentStatus
     if (status) {

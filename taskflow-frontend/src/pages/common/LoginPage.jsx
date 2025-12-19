@@ -2,7 +2,8 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
-import { FaSignInAlt } from 'react-icons/fa';
+import { FaSignInAlt, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useState } from 'react';
 
 /**
  * @desc Redesigned Login Page component with Dark Mode.
@@ -11,6 +12,7 @@ const LoginPage = () => {
   const { register: formRegister, handleSubmit, formState: { errors, isSubmitting } } = useForm();
   const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
   // Define reusable Tailwind classes for inputs
   const inputClass = "appearance-none relative block w-full px-4 py-3 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg shadow-sm placeholder-slate-400 dark:placeholder-slate-400 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 sm:text-sm";
@@ -51,7 +53,7 @@ const LoginPage = () => {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          
+
           {/* Email Input */}
           <div>
             <label htmlFor="email" className={labelClass}>Email address</label>
@@ -70,15 +72,24 @@ const LoginPage = () => {
           {/* Password Input */}
           <div>
             <label htmlFor="password" className={labelClass}>Password</label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              className={inputClass}
-              placeholder="Password"
-              {...formRegister('password', { required: 'Password is required' })}
-            />
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                required
+                className={inputClass}
+                placeholder="Password"
+                {...formRegister('password', { required: 'Password is required' })}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 cursor-pointer focus:outline-none"
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
             {errors.password && <p className={errorClass}>{errors.password.message}</p>}
           </div>
 

@@ -3,73 +3,77 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
 const userSchema = mongoose.Schema(
-  {
-    name: {
-      type: String,
-      trim: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-    },
-    passwordHash: {
-      type: String,
-      required: true, 
-      select: false, 
-    },
-    role: {
-      type: String,
-      required: true,
-      enum: ['customer', 'provider', 'admin'],
-      default: 'customer',
-    },
-    phone: {
-      type: String,
-    },
-    // --- Address Fields (Standardized for Location) ---
-    address: {
-      // House name/number/flat number
-      house_name: { 
-            type: String,
-            trim: true,
-        },
-      // Street, Locality, or Village
-      street_address: {
-            type: String,
-            trim: true,
-        },
-      // City or District
-      city_district: { 
-            type: String,
-            trim: true,
-        },
-      // State (e.g., Kerala)
-      state: {
-            type: String,
-            trim: true,
-        },
-      // 6-digit Pincode (kept as string for flexibility)
-      pincode: {
-            type: String, 
-            trim: true,
-        },
-    },
-    // ------------------------------------------------------------------
-    // GEO-SEARCH REMOVAL: The entire 'location' field is removed.
-    // ------------------------------------------------------------------
-    ratingAvg: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 5,
-    },
-  },
-  {
-    timestamps: true,
-  }
+  {
+    name: {
+      type: String,
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    passwordHash: {
+      type: String,
+      required: true,
+      select: false,
+    },
+    role: {
+      type: String,
+      required: true,
+      enum: ['customer', 'provider', 'admin'],
+      default: 'customer',
+    },
+    phone: {
+      type: String,
+    },
+    // --- Address Fields (Standardized for Location) ---
+    address: {
+      // House name/number/flat number
+      house_name: {
+        type: String,
+        trim: true,
+      },
+      // Street, Locality, or Village
+      street_address: {
+        type: String,
+        trim: true,
+      },
+      // City or District
+      city_district: {
+        type: String,
+        trim: true,
+      },
+      // State (e.g., Kerala)
+      state: {
+        type: String,
+        trim: true,
+      },
+      // 6-digit Pincode (kept as string for flexibility)
+      pincode: {
+        type: String,
+        trim: true,
+      },
+    },
+    // ------------------------------------------------------------------
+    // GEO-SEARCH REMOVAL: The entire 'location' field is removed.
+    // ------------------------------------------------------------------
+    ratingAvg: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+    isBanned: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
+  }
 );
 
 // --- Pre-save hook to hash the password before saving ---
@@ -94,8 +98,8 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 
 // --- Checks if essential address fields are populated ---
 userSchema.methods.isAddressComplete = function () {
-    const address = this.address;
-    return !!(address.house_name && address.street_address && address.city_district && address.state && address.pincode);
+  const address = this.address;
+  return !!(address.house_name && address.street_address && address.city_district && address.state && address.pincode);
 };
 
 const User = mongoose.model('User', userSchema);

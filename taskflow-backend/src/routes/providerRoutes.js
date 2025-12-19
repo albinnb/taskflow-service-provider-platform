@@ -6,6 +6,7 @@ import {
   updateProviderProfile,
   deleteProviderProfile,
   updateProviderAvailability, // <-- NEW IMPORT
+  getProviderAnalytics, // <-- NEW IMPORT
 } from '../controllers/providerController.js';
 import { getProviderAvailability } from '../controllers/bookingController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
@@ -32,32 +33,35 @@ router.get('/:id', getProviderById);
 // ------------------------------------------------------------------
 router.use(protect);
 
+// GET /api/providers/:id/analytics - Get Provider Analytics
+router.get('/:id/analytics', authorize('provider'), getProviderAnalytics);
+
 // PUT /api/providers/availability - Update the logged-in provider's weekly availability
 router.put(
-    '/availability',
-    authorize('provider'), // ONLY the Provider role can use this
-    updateProviderAvailability // <-- NEW CONTROLLER FUNCTION
+  '/availability',
+  authorize('provider'), // ONLY the Provider role can use this
+  updateProviderAvailability // <-- NEW CONTROLLER FUNCTION
 );
 
 
 // POST /api/providers - Create/Complete Provider Onboarding (must be 'provider' role)
 router.post(
-  '/',
-  authorize('provider'),
-  [
-    body('businessName').notEmpty().withMessage('Business name is required'),
-    body('description').isLength({ min: 50 }).withMessage('Description must be at least 50 characters'),
-    body('address.line').notEmpty().withMessage('Address line is required'),
-    body('location.coordinates').isArray({ min: 2, max: 2 }).withMessage('Location coordinates [lng, lat] are required'),
-  ],
-  createProviderProfile
+  '/',
+  authorize('provider'),
+  [
+    body('businessName').notEmpty().withMessage('Business name is required'),
+    body('description').isLength({ min: 50 }).withMessage('Description must be at least 50 characters'),
+    body('address.line').notEmpty().withMessage('Address line is required'),
+    body('location.coordinates').isArray({ min: 2, max: 2 }).withMessage('Location coordinates [lng, lat] are required'),
+  ],
+  createProviderProfile
 );
 
 // PUT /api/providers/:id - Update provider profile (Owner or Admin)
 router.put(
-  '/:id',
-  authorize(['provider', 'admin']),
-  updateProviderProfile
+  '/:id',
+  authorize(['provider', 'admin']),
+  updateProviderProfile
 );
 
 // DELETE /api/providers/:id - Delete provider profile (Admin only, potentially dangerous)

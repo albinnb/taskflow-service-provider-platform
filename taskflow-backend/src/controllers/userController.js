@@ -36,7 +36,7 @@ const updateAddress = asyncHandler(async (req, res) => {
         // 4. Send success response with the new completion status
         // We can use the isAddressComplete method we added to the model!
         const isProfileComplete = updatedUser.isAddressComplete();
-        
+
         res.status(200).json({
             success: true,
             message: 'Address updated successfully.',
@@ -111,7 +111,12 @@ const updateUser = asyncHandler(async (req, res) => {
         user.role = req.body.role || user.role;
         user.phone = req.body.phone || user.phone;
         // This line is for Admin updates, allowing them to override the whole address object.
-        user.address = req.body.address || user.address; 
+        user.address = req.body.address || user.address;
+
+        if (req.body.hasOwnProperty('isBanned')) {
+            user.isBanned = req.body.isBanned;
+        }
+
         // Location update logic could be complex; kept simple for admin CRUD
 
         const updatedUser = await user.save();

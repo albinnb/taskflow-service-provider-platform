@@ -53,7 +53,7 @@ const updateProviderRating = async function (doc, next) {
 
   try {
     // 1. Calculate new average rating and count
-    const stats = await this.model.aggregate([
+    const stats = await doc.constructor.aggregate([
       { $match: { providerId: doc.providerId } },
       {
         $group: {
@@ -67,9 +67,9 @@ const updateProviderRating = async function (doc, next) {
     // 2. Update the Provider document
     const updateData = stats.length > 0
       ? {
-          ratingAvg: stats[0].ratingAvg,
-          reviewCount: stats[0].reviewCount,
-        }
+        ratingAvg: stats[0].ratingAvg,
+        reviewCount: stats[0].reviewCount,
+      }
       : { ratingAvg: 0, reviewCount: 0 };
 
     await Provider.findByIdAndUpdate(doc.providerId, updateData);
@@ -83,13 +83,13 @@ const updateProviderRating = async function (doc, next) {
 
 reviewSchema.post('save', async function (doc, next) {
   // Use a setTimeout to de-couple the rating calculation from the main request thread
-  setTimeout(() => updateProviderRating.call(this, doc, () => {}), 0);
+  setTimeout(() => updateProviderRating.call(this, doc, () => { }), 0);
   next();
 });
 
 reviewSchema.post('deleteOne', { document: true, query: false }, async function (doc, next) {
-    setTimeout(() => updateProviderRating.call(this, doc, () => {}), 0);
-    next();
+  setTimeout(() => updateProviderRating.call(this, doc, () => { }), 0);
+  next();
 });
 
 const Review = mongoose.model('Review', reviewSchema);

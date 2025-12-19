@@ -2,6 +2,7 @@ import { validationResult } from 'express-validator';
 import Provider from '../models/Provider.js';
 import User from '../models/User.js';
 import Booking from '../models/Booking.js';
+import Review from '../models/Review.js';
 import ApiFeatures from '../utils/ApiFeatures.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import mongoose from 'mongoose';
@@ -17,8 +18,8 @@ const TIME_SLOTS = ['Morning', 'Afternoon', 'Evening'];
  */
 const getProviders = asyncHandler(async (req, res) => {
 	const features = new ApiFeatures(Provider.find().populate('userId', 'name email phone'), req.query)
-		.search() 
-		.filter() 
+		.search()
+		.filter()
 		.sort()
 		.limitFields()
 		.paginate();
@@ -42,8 +43,8 @@ const getProviders = asyncHandler(async (req, res) => {
  */
 const getProviderById = asyncHandler(async (req, res) => {
 	const provider = await Provider.findById(req.params.id)
-		.populate('userId', 'name email phone createdAt') 
-		.populate('categories', 'name slug') 
+		.populate('userId', 'name email phone createdAt')
+		.populate('categories', 'name slug')
 		.lean();
 
 	if (!provider) {
@@ -174,45 +175,45 @@ const deleteProviderProfile = asyncHandler(async (req, res) => {
  * @access Private/Provider
  */
 const updateProviderAvailability = asyncHandler(async (req, res) => {
-    const providerUserId = req.user._id;
-    const { availability } = req.body; // Expects an array matching the dailyAvailabilitySchema
+	const providerUserId = req.user._id;
+	const { availability } = req.body; // Expects an array matching the dailyAvailabilitySchema
 
-    if (!Array.isArray(availability) || availability.length === 0) {
-        res.status(400);
-        throw new Error('Availability data is required and must be an array.');
-    }
-    
-    // Find the provider profile linked to the user
-    const provider = await Provider.findOne({ userId: providerUserId });
+	if (!Array.isArray(availability) || availability.length === 0) {
+		res.status(400);
+		throw new Error('Availability data is required and must be an array.');
+	}
 
-    if (!provider) {
-        res.status(404);
-        throw new Error('Provider profile not found.');
-    }
+	// Find the provider profile linked to the user
+	const provider = await Provider.findOne({ userId: providerUserId });
 
-    // 1. Basic validation check for the array structure
-    const validDays = [0, 1, 2, 3, 4, 5, 6]; // Sunday to Saturday
-    availability.forEach(dayEntry => {
-        if (!validDays.includes(dayEntry.dayOfWeek) || 
-            !dayEntry.slots || 
-            typeof dayEntry.slots.Morning !== 'boolean' ||
-            typeof dayEntry.slots.Afternoon !== 'boolean' ||
-            typeof dayEntry.slots.Evening !== 'boolean'
-        ) {
-            // Throwing an error for invalid structure
-            throw new Error('Invalid availability structure provided. Check dayOfWeek, Morning, Afternoon, and Evening fields.');
-        }
-    });
+	if (!provider) {
+		res.status(404);
+		throw new Error('Provider profile not found.');
+	}
 
-    // 2. Update the provider's availability field
-    provider.availability = availability;
-    const updatedProvider = await provider.save();
+	// 1. Basic validation check for the array structure
+	const validDays = [0, 1, 2, 3, 4, 5, 6]; // Sunday to Saturday
+	availability.forEach(dayEntry => {
+		if (!validDays.includes(dayEntry.dayOfWeek) ||
+			!dayEntry.slots ||
+			typeof dayEntry.slots.Morning !== 'boolean' ||
+			typeof dayEntry.slots.Afternoon !== 'boolean' ||
+			typeof dayEntry.slots.Evening !== 'boolean'
+		) {
+			// Throwing an error for invalid structure
+			throw new Error('Invalid availability structure provided. Check dayOfWeek, Morning, Afternoon, and Evening fields.');
+		}
+	});
 
-    res.status(200).json({ 
-        success: true, 
-        message: 'Availability updated successfully.', 
-        data: updatedProvider.availability 
-    });
+	// 2. Update the provider's availability field
+	provider.availability = availability;
+	const updatedProvider = await provider.save();
+
+	res.status(200).json({
+		success: true,
+		message: 'Availability updated successfully.',
+		data: updatedProvider.availability
+	});
 });
 
 
@@ -225,71 +226,132 @@ const updateProviderAvailability = asyncHandler(async (req, res) => {
  * @access  Public
  */
 const getProviderAvailability = asyncHandler(async (req, res) => {
-    const { date } = req.query;
-    const { id: providerId } = req.params;
+	const { date } = req.query;
+	const { id: providerId } = req.params;
 
-    if (!date) {
-        res.status(400);
-        throw new Error('Date query parameter is required');
-    }
+	if (!date) {
+		res.status(400);
+		throw new Error('Date query parameter is required');
+	}
 
-    const queryDate = new Date(date);
-    // Convert to start of day for consistent comparison with bookingDate
-    const dateOnly = new Date(queryDate);
-    dateOnly.setUTCHours(0, 0, 0, 0); 
-    const dayOfWeek = dateOnly.getUTCDay(); // 0 = Sunday, 1 = Monday, etc.
+	const queryDate = new Date(date);
+	// Convert to start of day for consistent comparison with bookingDate
+	const dateOnly = new Date(queryDate);
+	dateOnly.setUTCHours(0, 0, 0, 0);
+	const dayOfWeek = dateOnly.getUTCDay(); // 0 = Sunday, 1 = Monday, etc.
 
-    // 1. Find the provider and their general availability for that day
-    const provider = await Provider.findById(providerId).select('availability');
-    if (!provider) {
-        res.status(404);
-        throw new Error('Provider not found');
-    }
+	// 1. Find the provider and their general availability for that day
+	const provider = await Provider.findById(providerId).select('availability');
+	if (!provider) {
+		res.status(404);
+		throw new Error('Provider not found');
+	}
 
-    const daySchedule = provider.availability.find(a => a.dayOfWeek === dayOfWeek);
+	const daySchedule = provider.availability.find(a => a.dayOfWeek === dayOfWeek);
 
-    // If provider does not work on this day, no slots are available
-    if (!daySchedule) {
-        return res.status(200).json({ success: true, data: [] });
-    }
+	// If provider does not work on this day, no slots are available
+	if (!daySchedule) {
+		return res.status(200).json({ success: true, data: [] });
+	}
 
-    // 2. Find all *existing* bookings for this provider on that date
-    const existingBookings = await Booking.find({
-        providerId: providerId,
-        bookingDate: dateOnly, // Use the 00:00:00Z date
-        status: { $in: ['confirmed', 'pending'] } // Only check for active bookings
-    }).select('timeSlot');
+	// 2. Find all *existing* bookings for this provider on that date
+	const existingBookings = await Booking.find({
+		providerId: providerId,
+		bookingDate: dateOnly, // Use the 00:00:00Z date
+		status: { $in: ['confirmed', 'pending'] } // Only check for active bookings
+	}).select('timeSlot');
 
-    const bookedSlots = existingBookings.map(b => b.timeSlot);
+	const bookedSlots = existingBookings.map(b => b.timeSlot);
 
-    // 3. Determine available slots
-    const availableSlots = TIME_SLOTS.filter(slotName => {
-        // Check A: Is the provider generally available in this slot according to their settings?
-        const isProviderAvailable = daySchedule.slots[slotName] === true;
-        
-        // Check B: Is the slot already booked by another customer?
-        const isAlreadyBooked = bookedSlots.includes(slotName);
+	// 3. Determine available slots
+	const availableSlots = TIME_SLOTS.filter(slotName => {
+		// Check A: Is the provider generally available in this slot according to their settings?
+		const isProviderAvailable = daySchedule.slots[slotName] === true;
 
-        // Check C: Only allow booking slots that are in the future
-        const now = new Date();
-        const slotStartTime = new Date(queryDate);
-        
-        let slotStartHour;
-        if (slotName === 'Morning') slotStartHour = 9;
-        else if (slotName === 'Afternoon') slotStartHour = 12;
-        else if (slotName === 'Evening') slotStartHour = 16; // 4 PM
+		// Check B: Is the slot already booked by another customer?
+		const isAlreadyBooked = bookedSlots.includes(slotName);
 
-        slotStartTime.setHours(slotStartHour, 0, 0, 0);
+		// Check C: Only allow booking slots that are in the future
+		const now = new Date();
+		const slotStartTime = new Date(queryDate);
 
-        const isInFuture = slotStartTime > now;
+		let slotStartHour;
+		if (slotName === 'Morning') slotStartHour = 9;
+		else if (slotName === 'Afternoon') slotStartHour = 12;
+		else if (slotName === 'Evening') slotStartHour = 16; // 4 PM
+
+		slotStartTime.setHours(slotStartHour, 0, 0, 0);
+
+		const isInFuture = slotStartTime > now;
 
 
-        return isProviderAvailable && !isAlreadyBooked && isInFuture;
-    });
+		return isProviderAvailable && !isAlreadyBooked && isInFuture;
+	});
 
-    res.status(200).json({ success: true, data: availableSlots });
+	res.status(200).json({ success: true, data: availableSlots });
 });
 
+
+
+const getProviderAnalytics = asyncHandler(async (req, res) => {
+	const providerId = req.params.id;
+
+	// Authorization check
+	// We need to find the provider first to check ownership
+	const provider = await Provider.findById(providerId);
+	if (!provider) {
+		res.status(404);
+		throw new Error('Provider not found');
+	}
+
+	if (provider.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+		res.status(403);
+		throw new Error('Not authorized to view analytics');
+	}
+
+	// 1. Calculate Total Revenue (Sum of totalPrice for 'completed' bookings)
+	const revenueStats = await Booking.aggregate([
+		{
+			$match: {
+				providerId: new mongoose.Types.ObjectId(providerId),
+				status: 'completed',
+				paymentStatus: 'paid'
+			}
+		},
+		{
+			$group: {
+				_id: null,
+				totalRevenue: { $sum: '$totalPrice' },
+				completedCount: { $sum: 1 }
+			}
+		}
+	]);
+
+	const totalRevenue = revenueStats.length > 0 ? revenueStats[0].totalRevenue : 0;
+	const completedBookings = revenueStats.length > 0 ? revenueStats[0].completedCount : 0;
+
+	// 2. Count Total Bookings (All statuses)
+	const totalBookings = await Booking.countDocuments({ providerId });
+
+	// 3. Fetch Recent Reviews
+	const reviews = await Review.find({ providerId })
+		.sort({ createdAt: -1 })
+		.limit(5)
+		.populate('userId', 'name')
+		.lean();
+
+	res.status(200).json({
+		success: true,
+		data: {
+			totalRevenue,
+			totalBookings,
+			completedBookings,
+			averageRating: provider.ratingAvg,
+			totalReviews: provider.reviewCount,
+			recentReviews: reviews
+		}
+	});
+});
 
 export {
 	getProviders,
@@ -298,5 +360,6 @@ export {
 	updateProviderProfile,
 	deleteProviderProfile,
 	getProviderAvailability,
-    updateProviderAvailability, // <-- ADDED THIS
+	updateProviderAvailability,
+	getProviderAnalytics,
 };

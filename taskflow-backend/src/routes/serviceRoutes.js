@@ -6,6 +6,8 @@ import {
   createService,
   updateService,
   deleteService,
+  getPendingServices,
+  updateServiceStatus,
 } from '../controllers/serviceController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 
@@ -34,5 +36,11 @@ router
   .route('/:id')
   .put(serviceValidators, updateService) // Update a service (Owner or Admin)
   .delete(deleteService); // Delete a service (Owner or Admin)
+
+// ------------------------------------------------------------------
+// ADMIN ONLY Service Approval Routes
+// ------------------------------------------------------------------
+router.get('/admin/pending', authorize('admin'), getPendingServices);
+router.put('/admin/:id/status', authorize('admin'), updateServiceStatus);
 
 export default router;

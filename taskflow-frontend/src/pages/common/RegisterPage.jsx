@@ -1,20 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, Link, Navigate, useSearchParams } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
-import { FaUserPlus } from 'react-icons/fa';
+import { FaUserPlus, FaEye, FaEyeSlash } from 'react-icons/fa';
 
 /**
  * @desc Redesigned Registration Page component with Dark Mode.
  */
 const RegisterPage = () => {
   const [searchParams] = useSearchParams();
+  const [showPassword, setShowPassword] = useState(false);
   const defaultRole = searchParams.get('role') || 'customer';
-  
+
   const { register: formRegister, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm({
     defaultValues: { role: defaultRole }
   });
-  
+
   const { register, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
@@ -58,7 +59,7 @@ const RegisterPage = () => {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          
+
           {/* Role Selection */}
           <div className="flex justify-center space-x-4">
             <label className={`cursor-pointer border-2 rounded-lg p-3 w-1/2 text-center font-medium transition duration-300 ${selectedRole === 'customer' ? 'border-teal-600 bg-teal-50 dark:bg-teal-900 dark:text-teal-300 text-teal-700 shadow-sm' : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500'}`}>
@@ -80,7 +81,7 @@ const RegisterPage = () => {
               I'm a Tasker
             </label>
           </div>
-          
+
           {/* Name Input */}
           <div>
             <label htmlFor="name" className={labelClass}>Full Name</label>
@@ -114,15 +115,24 @@ const RegisterPage = () => {
           {/* Password Input */}
           <div>
             <label htmlFor="password" className={labelClass}>Password</label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              className={inputClass}
-              placeholder="Create a password (min 6 chars)"
-              {...formRegister('password', { required: 'Password is required', minLength: { value: 6, message: 'Password must be at least 6 characters' } })}
-            />
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                className={inputClass}
+                placeholder="Create a password (min 6 chars)"
+                {...formRegister('password', { required: 'Password is required', minLength: { value: 6, message: 'Password must be at least 6 characters' } })}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 cursor-pointer focus:outline-none"
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
             {errors.password && <p className={errorClass}>{errors.password.message}</p>}
           </div>
 
