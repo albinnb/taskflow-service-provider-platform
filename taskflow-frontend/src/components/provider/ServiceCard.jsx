@@ -45,7 +45,7 @@ const ServiceCard = ({ service }) => {
                   {service.distance.toFixed(1)} km from you •
                 </span>
               ) : null}
-              {provider.address?.city_district || provider.address?.city || 'Location Unknown'}
+              {provider.address?.city_district || provider.address?.city || provider.location?.formattedAddress || 'Location Unknown'}
             </p>
             <p className="flex items-center">
               <FaStar className="w-4 h-4 mr-1.5 text-yellow-500" />

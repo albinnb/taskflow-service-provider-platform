@@ -4,8 +4,24 @@ import { coreApi } from '../api/serviceApi';
 import ServiceCard from '../components/provider/ServiceCard';
 import FilterSidebar from '../components/search/FilterSidebar';
 import { toast } from 'react-toastify';
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaMapMarkedAlt, FaList } from 'react-icons/fa';
 import { AuthContext } from '../context/AuthContext';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import { Link } from 'react-router-dom';
+
+// Fix for default Leaflet marker icons
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+});
+L.Marker.prototype.options.icon = DefaultIcon;
 
 /**
  * @desc Redesigned page to display search results (with Dark Mode).
@@ -18,6 +34,7 @@ const SearchResultsPage = () => {
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [totalCount, setTotalCount] = useState(0);
+    const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
 
     const [filters, setFilters] = useState({
         query: searchParams.get('query') || '',
@@ -35,9 +52,13 @@ const SearchResultsPage = () => {
             setLoading(true);
 
             // Start with base filters
-            let params = { ...filters };
+            const params = { ...filters };
 
-            // GEO-SEARCH REMOVAL: All location injection logic removed here.
+            // GEO-SEARCH: Location injection logic.
+            if (filters.lat && filters.lng) {
+                params.lat = filters.lat;
+                params.lng = filters.lng;
+            }
 
             // Clean up empty parameters before sending
             Object.keys(params).forEach(key => (params[key] === '' || params[key] === undefined) && delete params[key]);
@@ -64,6 +85,8 @@ const SearchResultsPage = () => {
         if (filters.page > 1) newParams.set('page', filters.page);
         if (filters.sort !== '-ratingAvg') newParams.set('sort', filters.sort);
         if (filters.category) newParams.set('category', filters.category);
+        if (filters.lat) newParams.set('lat', filters.lat);
+        if (filters.lng) newParams.set('lng', filters.lng);
 
         setSearchParams(newParams, { replace: true });
 
@@ -74,8 +97,10 @@ const SearchResultsPage = () => {
         const sort = searchParams.get('sort') || '-ratingAvg';
         const category = searchParams.get('category') || '';
         const page = searchParams.get('page') || 1;
+        const lat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')) : undefined;
+        const lng = searchParams.get('lng') ? parseFloat(searchParams.get('lng')) : undefined;
 
-        setFilters(prev => ({ ...prev, query, sort, category, page }));
+        setFilters(prev => ({ ...prev, query, sort, category, page, lat, lng }));
     }, [searchParams]);
 
 
@@ -103,6 +128,31 @@ const SearchResultsPage = () => {
                     )}
                 </h1>
 
+                <div className="flex justify-end mb-6">
+                    <div className="inline-flex rounded-md shadow-sm" role="group">
+                        <button
+                            type="button"
+                            onClick={() => setViewMode('list')}
+                            className={`px-4 py-2 text-sm font-medium rounded-l-lg border ${viewMode === 'list'
+                                ? 'bg-teal-600 text-white border-teal-600'
+                                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600'
+                                }`}
+                        >
+                            List View
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setViewMode('map')}
+                            className={`px-4 py-2 text-sm font-medium rounded-r-lg border ${viewMode === 'map'
+                                ? 'bg-teal-600 text-white border-teal-600'
+                                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600'
+                                }`}
+                        >
+                            Map View
+                        </button>
+                    </div>
+                </div>
+
                 <div className="flex flex-col lg:flex-row gap-8">
 
                     {/* Filter Sidebar */}
@@ -121,7 +171,7 @@ const SearchResultsPage = () => {
                                     Try adjusting your filters.
                                 </p>
                             </div>
-                        ) : (
+                        ) : viewMode === 'list' ? (
                             <>
                                 <div className="space-y-6 mb-8">
                                     {services.map((service) => (
@@ -148,6 +198,43 @@ const SearchResultsPage = () => {
                                     </button>
                                 </div>
                             </>
+                        ) : (
+                            <div className="h-[600px] rounded-xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-700">
+                                <MapContainer
+                                    center={filters.lat && filters.lng ? [filters.lat, filters.lng] : [9.9312, 76.2673]}
+                                    zoom={11}
+                                    style={{ height: '100%', width: '100%' }}
+                                >
+                                    <TileLayer
+                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                    />
+                                    {services.map((service) => (
+                                        service.providerId?.location?.coordinates && (
+                                            <Marker
+                                                key={service._id}
+                                                position={[
+                                                    service.providerId.location.coordinates[1],
+                                                    service.providerId.location.coordinates[0]
+                                                ]}
+                                            >
+                                                <Popup>
+                                                    <div className="p-1">
+                                                        <h4 className="font-bold text-slate-800">{service.title}</h4>
+                                                        <p className="text-sm text-slate-600">₹{service.price} / hr</p>
+                                                        <Link
+                                                            to={`/service/${service._id}`}
+                                                            className="text-teal-600 font-semibold hover:underline mt-2 block"
+                                                        >
+                                                            View Details
+                                                        </Link>
+                                                    </div>
+                                                </Popup>
+                                            </Marker>
+                                        )
+                                    ))}
+                                </MapContainer>
+                            </div>
                         )}
                     </div>
                 </div>

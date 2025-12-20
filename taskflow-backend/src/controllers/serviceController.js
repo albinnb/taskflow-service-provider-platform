@@ -9,7 +9,7 @@ import Category from '../models/Category.js'; // Import Category
 
 /**
  * @route GET /api/services
- * @desc Get all services with search, filter, and sort (Geo-Search removed)
+ * @desc Get all services with search, filter, and sort (Geo-Search enabled)
  * @access Public
  */
 // Helper to calculate distance (in km) between two coordinates
@@ -146,7 +146,7 @@ const getServices = asyncHandler(async (req, res) => {
 
         // 3. Execute the main query
         const features = new ApiFeatures(
-            Service.find(finalFilter).populate('providerId', 'businessName ratingAvg address'),
+            Service.find(finalFilter).populate('providerId', 'businessName ratingAvg address location'),
             req.query
         )
             .sort()

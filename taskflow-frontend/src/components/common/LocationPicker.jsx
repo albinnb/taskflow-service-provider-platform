@@ -146,16 +146,9 @@ const LocationPicker = ({ value, onChange }) => {
     // Handler: Search Result
     const handleSearchResult = (location) => {
         setPosition({ lat: location.lat, lng: location.lng });
-        // The search result comes with a label, but let's standardize via reverse geocoding or use label directly
-        setAddress(location.label);
-
-        // Extract city naively or re-fetch details
-        // For simplicity, we trigger onChange with the search label
-        onChange({
-            coordinates: { lat: location.lat, lng: location.lng },
-            fullAddress: location.label,
-            city: '' // Search result doesn't explicitly give city easily, relies on backend or reverse geocode if strictly needed
-        });
+        // Trigger reverse geocoding to get full details (city, state, pincode)
+        // This ensures the form fields get populated correctly even when selecting via search
+        fetchAddress(location.lat, location.lng);
     };
 
     // Handler: Map Click

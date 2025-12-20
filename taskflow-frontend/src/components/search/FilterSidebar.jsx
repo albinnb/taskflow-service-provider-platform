@@ -64,8 +64,10 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
-            setLocalFilters(prev => ({ ...prev, lat: latitude, lng: longitude }));
+            const updated = { ...localFilters, lat: latitude, lng: longitude };
+            setLocalFilters(updated);
             setLocationLoading(false);
+            onFilterChange(updated);
             toast.success("Location applied!");
           },
           (error) => {
@@ -80,12 +82,11 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
       }
     } else {
       // Remove location info
-      // Remove location info
-      setLocalFilters(prev => ({
-        ...prev,
-        lat: undefined,
-        lng: undefined
-      }));
+      const updated = { ...localFilters };
+      delete updated.lat;
+      delete updated.lng;
+      setLocalFilters(updated);
+      onFilterChange(updated);
     }
   };
 
