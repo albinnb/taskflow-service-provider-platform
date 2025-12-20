@@ -22,10 +22,11 @@ import ProviderSettings from './pages/provider/ProviderSettings';
 import DashboardAdmin from './pages/admin/DashboardAdmin';
 import AboutPage from './pages/common/AboutPage';
 import HelpPage from './pages/common/HelpPage';
+import HowItWorksPage from './pages/common/HowItWorksPage';
 
 // --- NEW IMPORTS ---
 import ProfileCompletionPage from './pages/user/ProfileCompletionPage';
-import ProviderProfileForm from './components/provider/ProviderProfileForm'; 
+import ProviderProfileForm from './components/provider/ProviderProfileForm';
 
 
 // ------------------------------------------------------------------
@@ -34,50 +35,51 @@ import ProviderProfileForm from './components/provider/ProviderProfileForm';
 // NOTE: Providers are excluded from profile completion check
 // ------------------------------------------------------------------
 const ProfileCheckWrapper = ({ children }) => {
-    const { isAuthenticated, isProfileComplete, loading, user } = useContext(AuthContext);
+  const { isAuthenticated, isProfileComplete, loading, user } = useContext(AuthContext);
 
-    if (loading) {
-        // Show a simple loading indicator while context loads user status
-        return <div className="p-10 text-center">Loading user profile...</div>;
-    }
+  if (loading) {
+    // Show a simple loading indicator while context loads user status
+    return <div className="p-10 text-center">Loading user profile...</div>;
+  }
 
-    // 1. If user is logged in AND profile is NOT complete, force redirect to the completion page
-    // BUT: Only for customers, not for providers or admins
-    if (isAuthenticated && user && !isProfileComplete && user.role === 'customer') {
-        return <Navigate to="/profile/complete" replace />;
-    }
+  // 1. If user is logged in AND profile is NOT complete, force redirect to the completion page
+  // BUT: Only for customers, not for providers or admins
+  if (isAuthenticated && user && !isProfileComplete && user.role === 'customer') {
+    return <Navigate to="/profile/complete" replace />;
+  }
 
-    // 2. Otherwise (if logged out, or logged in and complete), proceed to children (the main routes)
-    return children;
+  // 2. Otherwise (if logged out, or logged in and complete), proceed to children (the main routes)
+  return children;
 };
 // ------------------------------------------------------------------
 
 
 function App() {
-  return (
-    <AuthProvider>
-      <ThemeProvider>
-        <BrowserRouter>
-          <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-900">
-            <Header />
-            <main className="flex-grow">
-              <Routes>
-                {/* Public Routes (Always Accessible) */}
-                <Route path="/" element={<HomePage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/services" element={<ServicesPage />} />
-                <Route path="/search" element={<SearchResultsPage />} />
-                <Route path="/service/:id" element={<ServiceDetailPage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/help" element={<HelpPage />} />
-                
+  return (
+    <AuthProvider>
+      <ThemeProvider>
+        <BrowserRouter>
+          <div className="flex flex-col min-h-screen bg-background text-foreground font-sans antialiased">
+            <Header />
+            <main className="flex-grow">
+              <Routes>
+                {/* Public Routes (Always Accessible) */}
+                <Route path="/" element={<HomePage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/services" element={<ServicesPage />} />
+                <Route path="/search" element={<SearchResultsPage />} />
+                <Route path="/service/:id" element={<ServiceDetailPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/help" element={<HelpPage />} />
+                <Route path="/how-it-works" element={<HowItWorksPage />} />
+
                 {/* Profile Completion Routes */}
                 <Route path="/profile/complete" element={<ProfileCompletionPage />} />
                 <Route path="/provider/profile/setup" element={<ProviderProfileForm />} />
 
                 {/* Protected Routes */}
-                <Route element={<ProfileCheckWrapper><ProtectedRoute /></ProfileCheckWrapper>}> 
+                <Route element={<ProfileCheckWrapper><ProtectedRoute /></ProfileCheckWrapper>}>
                   <Route path="/customer/dashboard" element={<DashboardCustomer />} />
                   <Route path="/review/submit/:bookingId" element={<ReviewSubmitPage />} />
                   <Route path="/provider/dashboard" element={<DashboardProvider />} />

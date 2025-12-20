@@ -1,18 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
-import { useTheme } from '../../context/ThemeContext'; // Import useTheme
-import { FaUserCircle, FaMoon, FaSun } from 'react-icons/fa'; // Import icons
+import { useTheme } from '../../context/ThemeContext';
+import { FaUserCircle, FaMoon, FaSun } from 'react-icons/fa';
+import { Button } from '../ui/Button'; // Import Shadcn-style Button
 
-/**
- * @desc Redesigned header with Dark Mode Toggle.
- */
 const Header = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
-  // *** THIS IS THE MISSING FUNCTION ***
-  // I've added it back in.
   const getDashboardLink = () => {
     if (!user) return '/login';
     if (user.role === 'admin') return '/admin/dashboard';
@@ -21,72 +17,65 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white dark:bg-slate-800 sticky top-0 z-50 border-b border-slate-200 dark:border-slate-700">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
-          
-          {/* Logo */}
-          <Link to="/" className="text-3xl font-extrabold text-slate-800 dark:text-white transition-colors duration-300 hover:text-teal-600 dark:hover:text-teal-500">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background transition-colors duration-300">
+      <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+
+        {/* LOGO */}
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold text-xl rounded-bl-sm">
+            T
+          </div>
+          <span className="text-xl font-bold tracking-tight text-foreground group-hover:text-primary transition-colors">
             TaskFlow
+          </span>
+        </Link>
+
+        {/* DESKTOP NAV */}
+        <nav className="hidden md:flex items-center gap-6">
+          <Link to="/services" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+            Services
           </Link>
+          <Link to="/how-it-works" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+            How it Works
+          </Link>
+        </nav>
 
-          {/* Navigation Links (Right Side) */}
-          <nav className="flex items-center space-x-6">
-            <Link 
-              to="/services" 
-              className="text-lg font-medium text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-500 transition-colors duration-300"
-            >
-              Services
-            </Link>
+        {/* ACTIONS */}
+        <div className="flex items-center gap-3">
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
+            aria-label="Toggle Theme"
+          >
+            {theme === 'light' ? <FaMoon className="h-4 w-4" /> : <FaSun className="h-4 w-4" />}
+          </button>
 
-            {isAuthenticated ? (
-              <>
-                <Link
-                  to={getDashboardLink()}
-                  className="text-lg font-medium text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-500 transition-colors duration-300 flex items-center"
-                >
-                  <FaUserCircle className='mr-2'/> 
+          {isAuthenticated ? (
+            <div className="flex items-center gap-3">
+              <Link to={getDashboardLink()}>
+                <Button variant="ghost" size="sm" className="font-semibold text-muted-foreground hover:text-foreground">
                   Dashboard
-                </Link>
-                
-                <button
-                  onClick={logout}
-                  className="text-lg font-medium text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-500 transition-colors duration-300"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="text-lg font-medium text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-500 transition-colors duration-300"
-                >
-                  Sign In
-                </Link>
-                
-                <Link
-                  to="/register?role=provider" 
-                  className="px-5 py-2.5 text-lg font-semibold bg-teal-600 text-white rounded-lg shadow-sm hover:bg-teal-700 transition-all duration-300"
-                >
+                </Button>
+              </Link>
+              <Button onClick={logout} variant="outline" size="sm" className='border-destructive/50 text-destructive hover:bg-destructive/10'>
+                Log Out
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Link to="/login">
+                <Button variant="ghost" className="font-semibold text-muted-foreground hover:text-foreground">
+                  Log In
+                </Button>
+              </Link>
+              <Link to="/register?role=provider">
+                <Button className="rounded-full px-6 font-bold shadow-none hover:opacity-90 transition-opacity">
                   Become a Tasker
-                </Link>
-              </>
-            )}
-
-            {/* Dark Mode Toggle Button */}
-            <button
-              onClick={toggleTheme}
-              className="text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-500 transition-all duration-300"
-              aria-label="Toggle dark mode"
-            >
-              {theme === 'light' ? (
-                <FaMoon className="w-5 h-5" />
-              ) : (
-                <FaSun className="w-5 h-5" />
-              )}
-            </button>
-          </nav>
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </header>

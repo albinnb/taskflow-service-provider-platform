@@ -1,16 +1,116 @@
-/* src/styles/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    /* TASKRABBIT LIGHT THEME */
+    --background: 0 0% 100%;
+    /* #FFFFFF */
+    --foreground: 220 10% 20%;
+    /* #2B2E34 */
+
+    --card: 0 0% 100%;
+    /* #FFFFFF */
+    --card-foreground: 220 10% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 10% 20%;
+
+    --primary: 152 73% 43%;
+    /* #1DBF73 (TaskRabbit Green) */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 20% 98%;
+    /* #F6F8FA */
+    --secondary-foreground: 220 10% 20%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 220 8% 46%;
+    /* #6F727A */
+
+    --accent: 152 73% 95%;
+    /* Light Green Tint */
+    --accent-foreground: 152 73% 40%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 13% 91%;
+    /* #EBEBEB */
+    --input: 220 13% 91%;
+    --ring: 152 73% 43%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* VS CODE DARK MODERN THEME */
+    --background: 0 0% 12%;
+    /* #1F1F1F */
+    --foreground: 0 0% 80%;
+    /* #CCCCCC */
+
+    --card: 0 0% 12%;
+    /* #1F1F1F */
+    --card-foreground: 0 0% 80%;
+
+    --popover: 0 0% 15%;
+    /* #252526 (VS Code Dropdown) */
+    --popover-foreground: 0 0% 80%;
+
+    --primary: 204 100% 40%;
+    /* #007ACC (VS Code Blue) */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 9%;
+    /* #181818 (Sidebar) */
+    --secondary-foreground: 0 0% 80%;
+
+    --muted: 0 0% 18%;
+    /* #2D2D2D */
+    --muted-foreground: 0 0% 60%;
+    /* #999999 */
+
+    --accent: 204 100% 40%;
+    /* Blue again for accent */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 17%;
+    /* #2B2B2B */
+    --input: 0 0% 20%;
+    /* #333333 (Input bg) */
+    --ring: 204 100% 40%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
 @layer components {
+
   /* Form Inputs */
   .input-field {
     @apply w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary placeholder-gray-500 text-gray-900 sm:text-sm;
   }
+
   .form-error {
     @apply mt-1 text-sm text-red-600;
   }
+
   .form-label {
     @apply block text-sm font-medium text-gray-700 mb-1;
   }
@@ -19,9 +119,11 @@
   .tab-button {
     @apply py-3 px-4 font-medium text-gray-600 border-b-2 border-transparent whitespace-nowrap transition duration-150 flex items-center;
   }
+
   .tab-button:hover {
     @apply text-primary border-gray-300;
   }
+
   .tab-button.active {
     @apply text-primary border-primary;
   }

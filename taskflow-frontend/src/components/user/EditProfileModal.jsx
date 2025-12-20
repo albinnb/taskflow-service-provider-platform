@@ -4,6 +4,8 @@ import { FaTimes, FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaHome, FaCity, F
 import LocationPicker from '../common/LocationPicker';
 import { coreApi } from '../../api/serviceApi';
 import { toast } from 'react-toastify';
+import { Button } from '../ui/Button';
+import { cn } from '../../lib/utils';
 
 // List of Indian states for the dropdown (for simplicity)
 const INDIAN_STATES = [
@@ -19,9 +21,14 @@ const INDIAN_STATES = [
 ];
 
 const EditProfileModal = ({ isOpen, onClose, user, onUpdate }) => {
-    const { register, handleSubmit, reset, setValue, watch, formState: { errors, isSubmitting } } = useForm();
+    const { register, handleSubmit, reset, setValue, formState: { errors, isSubmitting } } = useForm();
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [initialLocation, setInitialLocation] = useState(null);
+
+    // Semantic classes
+    const labelClass = "block text-sm font-semibold text-foreground mb-2";
+    const inputClass = "w-full border border-input bg-background text-foreground rounded-lg shadow-sm text-sm p-2.5 focus:ring-2 focus:ring-primary focus:border-primary";
+    const errorClass = "mt-1 text-sm text-destructive";
 
     useEffect(() => {
         if (user) {
@@ -89,7 +96,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdate }) => {
             await coreApi.updateUserProfileAddress(addressData);
 
             toast.success("Profile updated successfully!");
-            onUpdate({ ...user, ...profileData, address: addressData, location: addressData.location ? addressData.location : user.location }); // Optimistic update / trigger refresh
+            onUpdate({ ...user, ...profileData, address: addressData, location: addressData.location ? addressData.location : user.location });
             onClose();
         } catch (error) {
             console.error(error);
@@ -98,132 +105,133 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdate }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4 overflow-y-auto">
-            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-2xl overflow-hidden relative animation-fade-in user-select-none my-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="bg-card border border-border rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden relative animation-fade-in my-8">
 
                 {/* Header */}
-                <div className="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">Edit Profile</h3>
-                    <button onClick={onClose} className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition">
-                        <FaTimes />
+                <div className="flex justify-between items-center p-6 border-b border-border bg-muted/20">
+                    <h3 className="text-xl font-bold text-foreground">Edit Profile</h3>
+                    <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+                        <FaTimes className="w-5 h-5" />
                     </button>
                 </div>
 
                 {/* Body */}
-                <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6 overflow-y-auto">
 
                     {/* Name */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
+                        <label className={labelClass}>Full Name</label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <FaUser className="text-slate-400" />
+                                <FaUser className="text-muted-foreground" />
                             </div>
                             <input
                                 type="text"
-                                className="pl-10 w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                                className={`pl-10 ${inputClass}`}
                                 {...register('name', { required: 'Name is required' })}
                             />
                         </div>
-                        {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name.message}</p>}
+                        {errors.name && <p className={errorClass}>{errors.name.message}</p>}
                     </div>
 
                     {/* Email */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email Address</label>
+                        <label className={labelClass}>Email Address</label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <FaEnvelope className="text-slate-400" />
+                                <FaEnvelope className="text-muted-foreground" />
                             </div>
                             <input
                                 type="email"
-                                className="pl-10 w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                                className={`pl-10 ${inputClass}`}
                                 {...register('email', { required: 'Email is required', pattern: { value: /^\S+@\S+$/i, message: "Invalid email" } })}
                             />
                         </div>
-                        {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email.message}</p>}
+                        {errors.email && <p className={errorClass}>{errors.email.message}</p>}
                     </div>
 
                     {/* Phone */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Phone Number</label>
+                        <label className={labelClass}>Phone Number</label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <FaPhone className="text-slate-400" />
+                                <FaPhone className="text-muted-foreground" />
                             </div>
                             <input
                                 type="tel"
-                                className="pl-10 w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
-                                placeholder="e.g. 9876543210"
+                                className={`pl-10 ${inputClass}`}
+                                placeholder="e.g. +91 9876543210"
                                 {...register('phone', { required: 'Phone is required', pattern: { value: /^[0-9+\s-]{10,}$/, message: "Invalid phone number" } })}
                             />
                         </div>
-                        {errors.phone && <p className="text-xs text-red-600 mt-1">{errors.phone.message}</p>}
+                        {errors.phone && <p className={errorClass}>{errors.phone.message}</p>}
                     </div>
 
-                    <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
-                        <h4 className="text-md font-semibold text-slate-800 dark:text-white mb-3 flex items-center">
-                            <FaMapMarkerAlt className="mr-2 text-teal-600" /> Address & Location
+                    <div className="border-t border-border pt-6">
+                        <h4 className="text-lg font-semibold text-foreground mb-4 flex items-center">
+                            <FaMapMarkerAlt className="mr-2 text-primary" /> Address & Location
                         </h4>
 
-                        <div className="mb-4">
+                        <div className="mb-6 p-4 bg-muted/30 rounded-lg border border-border">
+                            <p className="text-sm text-muted-foreground mb-2">Search and select your location on the map to auto-fill details.</p>
                             <LocationPicker value={initialLocation} onChange={handleLocationChange} />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* House Name */}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">House Name / Flat No.</label>
+                                <label className={labelClass}>House Name / Flat No.</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <FaHome className="text-slate-400" />
+                                        <FaHome className="text-muted-foreground" />
                                     </div>
                                     <input
                                         type="text"
-                                        className="pl-10 w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                                        className={`pl-10 ${inputClass}`}
                                         {...register('house_name', { required: 'House Name is required' })}
                                     />
                                 </div>
-                                {errors.house_name && <p className="text-xs text-red-600 mt-1">{errors.house_name.message}</p>}
+                                {errors.house_name && <p className={errorClass}>{errors.house_name.message}</p>}
                             </div>
 
                             {/* Street Address */}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Street / Locality</label>
+                                <label className={labelClass}>Street / Locality</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <FaAddressCard className="text-slate-400" />
+                                        <FaAddressCard className="text-muted-foreground" />
                                     </div>
                                     <input
                                         type="text"
-                                        className="pl-10 w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                                        className={`pl-10 ${inputClass}`}
                                         {...register('street_address', { required: 'Street Address is required' })}
                                     />
                                 </div>
-                                {errors.street_address && <p className="text-xs text-red-600 mt-1">{errors.street_address.message}</p>}
+                                {errors.street_address && <p className={errorClass}>{errors.street_address.message}</p>}
                             </div>
 
                             {/* City */}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">City / District</label>
+                                <label className={labelClass}>City / District</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <FaCity className="text-slate-400" />
+                                        <FaCity className="text-muted-foreground" />
                                     </div>
                                     <input
                                         type="text"
-                                        className="pl-10 w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                                        className={`pl-10 ${inputClass}`}
                                         {...register('city_district', { required: 'City is required' })}
                                     />
                                 </div>
-                                {errors.city_district && <p className="text-xs text-red-600 mt-1">{errors.city_district.message}</p>}
+                                {errors.city_district && <p className={errorClass}>{errors.city_district.message}</p>}
                             </div>
 
                             {/* State */}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">State</label>
+                                <label className={labelClass}>State</label>
                                 <select
-                                    className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                                    className={inputClass}
                                     {...register('state', { required: 'State is required' })}
                                 >
                                     <option value="">Select State</option>
@@ -231,38 +239,37 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdate }) => {
                                         <option key={state} value={state}>{state}</option>
                                     ))}
                                 </select>
-                                {errors.state && <p className="text-xs text-red-600 mt-1">{errors.state.message}</p>}
+                                {errors.state && <p className={errorClass}>{errors.state.message}</p>}
                             </div>
 
                             {/* Pincode */}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Pincode</label>
+                                <label className={labelClass}>Pincode</label>
                                 <input
                                     type="text"
-                                    className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                                    className={inputClass}
                                     maxLength="6"
                                     {...register('pincode', { required: 'Pincode is required', pattern: { value: /^[0-9]{6}$/, message: "Must be 6 digits" } })}
                                 />
-                                {errors.pincode && <p className="text-xs text-red-600 mt-1">{errors.pincode.message}</p>}
+                                {errors.pincode && <p className={errorClass}>{errors.pincode.message}</p>}
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex justify-end space-x-3 pt-4">
-                        <button
+                    <div className="flex justify-end space-x-3 pt-4 border-t border-border">
+                        <Button
                             type="button"
+                            variant="secondary"
                             onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700 transition"
                         >
                             Cancel
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="submit"
                             disabled={isSubmitting}
-                            className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:opacity-50 transition shadow-sm"
                         >
                             {isSubmitting ? 'Saving...' : 'Save Changes'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>

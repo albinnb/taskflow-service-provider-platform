@@ -91,14 +91,14 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
   };
 
   // Reusable Tailwind classes
-  const labelClass = "block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2";
-  const inputClass = "w-full border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-white rounded-lg shadow-sm text-sm p-2.5 focus:ring-2 focus:ring-teal-500 focus:border-teal-500";
-  const checkboxLabelClass = "ml-2 block text-sm font-medium text-slate-700 dark:text-slate-200";
+  const labelClass = "block text-sm font-semibold text-foreground mb-2";
+  const inputClass = "w-full border-input bg-background text-foreground rounded-lg shadow-sm text-sm p-2.5 focus:ring-2 focus:ring-primary focus:border-primary";
+  const checkboxLabelClass = "ml-2 block text-sm font-medium text-foreground";
 
   return (
-    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 sticky top-24">
-      <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-5 flex items-center">
-        <FaFilter className="mr-2 text-teal-600 dark:text-teal-400" /> Filters
+    <div className="bg-card p-6 rounded-xl shadow-lg border border-border sticky top-24">
+      <h2 className="text-xl font-bold text-foreground mb-5 flex items-center">
+        <FaFilter className="mr-2 text-primary" /> Filters
       </h2>
       <form onSubmit={handleApply} className='space-y-5'>
 
@@ -158,7 +158,7 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
 
         {/* Price Range Filter (Max Price) */}
         {/* Location Filter */}
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-700">
+        <div className="pt-2 border-t border-border">
           <label className="flex items-center cursor-pointer">
             <input
               type="checkbox"
@@ -167,19 +167,19 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
               disabled={locationLoading}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 dark:peer-focus:ring-teal-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-teal-600"></div>
-            <span className="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center">
+            <div className="relative w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+            <span className="ml-3 text-sm font-medium text-foreground flex items-center">
               {locationLoading ? (
                 <span className="animate-pulse">Locating...</span>
               ) : (
                 <>
-                  <FaLocationArrow className="mr-1.5 text-teal-500" /> Sort by Nearest
+                  <FaLocationArrow className="mr-1.5 text-primary" /> Sort by Nearest
                 </>
               )}
             </span>
           </label>
           {localFilters.lat && (
-            <p className="text-xs text-teal-600 dark:text-teal-400 mt-1 ml-14">
+            <p className="text-xs text-primary mt-1 ml-14">
               Location set ({localFilters.lat.toFixed(2)}, {localFilters.lng.toFixed(2)})
             </p>
           )}
@@ -193,7 +193,7 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
             name="isVerified"
             checked={!!localFilters.isVerified}
             onChange={handleChange}
-            className="h-4 w-4 text-teal-600 border-slate-300 dark:border-slate-600 rounded focus:ring-teal-500"
+            className="h-4 w-4 text-primary border-input rounded focus:ring-primary"
           />
           <label htmlFor="isVerified" className={checkboxLabelClass}>
             Verified Taskers Only
@@ -204,14 +204,14 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
         <div className='pt-4 space-y-3'>
           <button
             type="submit"
-            className="w-full py-2.5 px-4 bg-teal-600 text-white font-semibold rounded-lg shadow-sm hover:bg-teal-700 transition duration-300"
+            className="w-full py-2.5 px-4 bg-primary text-primary-foreground font-semibold rounded-lg shadow-sm hover:opacity-90 transition duration-300"
           >
             Apply Filters
           </button>
           <button
             type="button"
             onClick={handleClear}
-            className="w-full py-2.5 px-4 bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-100 font-semibold rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition duration-300"
+            className="w-full py-2.5 px-4 bg-secondary text-secondary-foreground font-semibold rounded-lg hover:bg-secondary/80 transition duration-300"
           >
             Clear Filters
           </button>

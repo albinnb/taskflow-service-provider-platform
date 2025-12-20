@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import useAuth from '../../hooks/useAuth';
 import { coreApi } from '../../api/serviceApi';
 import { toast } from 'react-toastify';
-import { FaUserCheck, FaBolt, FaListAlt, FaCalendarCheck, FaChartLine, FaTrash, FaEdit, FaPlusCircle, FaCog, FaStar, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaUserCheck, FaBolt, FaListAlt, FaCalendarCheck, FaChartLine, FaTrash, FaEdit, FaPlusCircle, FaCog, FaStar, FaMapMarkerAlt, FaSignOutAlt } from 'react-icons/fa';
 import ServiceForm from '../../components/provider/ServiceForm';
-// *** THIS IS THE FIX ***
-// The file is in the same folder, so it should be './'
 import ProviderSettings from './ProviderSettings';
 import { Link } from 'react-router-dom';
+import { cn } from '../../lib/utils';
+import { Button } from '../../components/ui/Button';
 
 const TABS = {
   BOOKINGS: 'bookings',
@@ -16,391 +16,272 @@ const TABS = {
   SETTINGS: 'settings',
 };
 
-/**
- * @desc Redesigned Provider Dashboard (with Dark Mode)
- */
 // Helper to calculate distance
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-  var R = 6371; // Radius of the earth in km
+  var R = 6371;
   var dLat = deg2rad(lat2 - lat1);
   var dLon = deg2rad(lon2 - lon1);
-  var a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
   var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  var d = R * c; // Distance in km
-  return d;
+  return R * c;
 }
-
-function deg2rad(deg) {
-  return deg * (Math.PI / 180);
-}
+function deg2rad(deg) { return deg * (Math.PI / 180); }
 
 const DashboardProvider = () => {
-  const { user, roleProfile, loadUser, isAuthenticated } = useAuth();
+  const { user, roleProfile, loadUser, isAuthenticated, logout } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState(TABS.BOOKINGS);
   const [selectedStatus, setSelectedStatus] = useState('pending');
   const [editingService, setEditingService] = useState(null);
-  const [analyticsData, setAnalyticsData] = useState(null); // Correctly placed state
+  const [analyticsData, setAnalyticsData] = useState(null);
 
   useEffect(() => {
     if (roleProfile && isAuthenticated) {
       fetchData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roleProfile, selectedStatus, view, isAuthenticated]);
 
   const fetchData = async () => {
-    // If user is not authenticated (e.g., during logout redirect), skip fetching
-    if (!isAuthenticated) {
-      return;
-    }
-
+    if (!isAuthenticated) return;
     setLoading(true);
-    // Clear data based on which tab is active
     if (view === TABS.SERVICES) setServices([]);
     if (view === TABS.BOOKINGS) setBookings([]);
 
     try {
       if (view === TABS.SERVICES) {
-        const allServicesRes = await coreApi.searchServices({
-          providerId: roleProfile._id,
-          limit: 50,
-        });
-        setServices(allServicesRes.data.data);
+        const res = await coreApi.searchServices({ providerId: roleProfile._id, limit: 50 });
+        setServices(res.data.data);
       }
-
       if (view === TABS.BOOKINGS) {
-        const bookingsRes = await coreApi.getBookings({ status: selectedStatus, sort: 'scheduledAt' });
-        setBookings(bookingsRes.data.data);
+        const res = await coreApi.getBookings({ status: selectedStatus, sort: 'scheduledAt' });
+        setBookings(res.data.data);
       }
-
       if (view === TABS.ANALYTICS) {
-        const analyticsRes = await coreApi.getProviderAnalytics(roleProfile._id);
-        setAnalyticsData(analyticsRes.data.data);
+        const res = await coreApi.getProviderAnalytics(roleProfile._id);
+        setAnalyticsData(res.data.data);
       }
-
     } catch (error) {
-      if (error.response?.status === 401) {
-        // Token is invalid/expired or user logged out; let global auth flow handle redirect
-        console.warn('Unauthorized when loading provider dashboard data:', error);
-      } else {
-        toast.error('Failed to load dashboard data.');
-        console.error(error);
-      }
+      toast.error('Failed to load dashboard data.');
     } finally {
       setLoading(false);
     }
   };
 
-  // This is a helper function for the tab content crash
-  const setData = (data) => {
-    if (view === TABS.SERVICES) setServices(data);
-    else if (view === TABS.BOOKINGS) setBookings(data);
-  };
-
   const handleUpdateStatus = async (bookingId, newStatus) => {
     try {
       await coreApi.updateBookingStatus(bookingId, { status: newStatus });
-      toast.success(`Booking successfully marked as ${newStatus}.`);
-      fetchData(); // Refresh list
+      toast.success(`Booking ${newStatus}.`);
+      fetchData();
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to update booking status.');
+      toast.error('Failed to update status.');
     }
   };
 
   const handleDeleteService = async (serviceId) => {
-    if (!window.confirm('Are you sure you want to delete this service? This action is irreversible.')) return;
+    if (!window.confirm('Delete this service?')) return;
     try {
       await coreApi.deleteService(serviceId);
-      toast.success('Service deleted successfully.');
+      toast.success('Service deleted.');
       fetchData();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to delete service.');
-    }
+    } catch (error) { toast.error('Failed to delete service.'); }
   };
 
-  // --- RENDER FUNCTIONS ---
-
-  const renderBookings = () => (
-    <div>
-      <div className='flex flex-wrap gap-2 mb-4'>
-        {['pending', 'confirmed', 'completed', 'cancelled'].map(status => (
-          <button
-            key={status}
-            onClick={() => setSelectedStatus(status)}
-            className={`px-4 py-2 text-sm font-semibold rounded-full capitalize transition-all duration-300 ${selectedStatus === status
-              ? 'bg-teal-600 text-white shadow-md'
-              : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'
-              }`}
-          >
-            {status}
-          </button>
-        ))}
-      </div>
-
-      <h3 className='text-xl font-semibold text-slate-700 dark:text-slate-200 mb-4'>
-        {selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1)} Bookings
-      </h3>
-
-      {loading ? <p className="p-10 text-center text-teal-600 dark:text-teal-400">Loading bookings...</p> : bookings.length === 0 ? (
-        <p className="p-10 text-center text-slate-500 dark:text-slate-400">No {selectedStatus} bookings found.</p>
-      ) : (
-        <div className="space-y-4">
-          {bookings.map(booking => (
-            <div key={booking._id} className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-              <div>
-                <p className='text-lg font-bold text-slate-800 dark:text-white'>{booking.serviceId.title} - ${booking.totalPrice.toFixed(2)}</p>
-                <p className='text-sm text-slate-600 dark:text-slate-300'>Customer: {booking.userId.name}</p>
-                <p className='text-sm text-slate-500 dark:text-slate-400 flex items-center mt-1'>
-                  <FaCalendarCheck className='mr-2 text-teal-600 dark:text-teal-400' /> {new Date(booking.scheduledAt).toLocaleString()}
-                </p>
-                {booking.userId?.location?.coordinates && roleProfile?.location?.coordinates && (
-                  <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mt-1 flex items-center">
-                    <FaMapMarkerAlt className="mr-1" />
-                    {getDistanceFromLatLonInKm(
-                      roleProfile.location.coordinates[1],
-                      roleProfile.location.coordinates[0],
-                      booking.userId.location.coordinates[1],
-                      booking.userId.location.coordinates[0]
-                    ).toFixed(1)} km away
-                  </p>
-                )}
-                <div className="mt-1">
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${booking.paymentStatus === 'paid'
-                    ? 'bg-green-100 text-green-800 border border-green-200'
-                    : 'bg-orange-100 text-orange-800 border border-orange-200'
-                    }`}>
-                    {booking.paymentStatus === 'paid' ? 'Payment Verified' : 'Payment Pending'}
-                  </span>
-                </div>
-              </div>
-              <div className='mt-3 sm:mt-0 flex-shrink-0 flex items-center space-x-2'>
-                {booking.status === 'pending' && (
-                  <button
-                    onClick={() => handleUpdateStatus(booking._id, 'confirmed')}
-                    className='px-3 py-1.5 text-sm font-semibold bg-green-500 text-white rounded-md hover:bg-green-600 transition-all duration-300'
-                  >
-                    Accept
-                  </button>
-                )}
-                {['pending', 'confirmed'].includes(booking.status) && (
-                  <button
-                    onClick={() => handleUpdateStatus(booking._id, 'cancelled')}
-                    className='px-3 py-1.5 text-sm font-semibold bg-red-500 text-white rounded-md hover:bg-red-600 transition-all duration-300'
-                  >
-                    Decline
-                  </button>
-                )}
-                {booking.status === 'confirmed' && (
-                  <button
-                    onClick={() => handleUpdateStatus(booking._id, 'completed')}
-                    className='px-3 py-1.5 text-sm font-semibold bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-all duration-300'
-                  >
-                    Complete
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+  const SidebarItem = ({ id, icon: Icon, label }) => (
+    <button
+      onClick={() => setView(id)}
+      className={cn(
+        "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors border-l-2",
+        view === id
+          ? "bg-secondary text-primary border-primary"
+          : "text-muted-foreground border-transparent hover:bg-muted hover:text-foreground"
       )}
-    </div>
+    >
+      <Icon className="h-5 w-5" />
+      <span>{label}</span>
+    </button>
   );
 
-  const renderServices = () => (
-    <div className='space-y-6'>
-      <button
-        onClick={() => setEditingService('new')}
-        className='flex items-center px-5 py-2.5 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 shadow-sm transition-all duration-300'>
-        <FaPlusCircle className='mr-2' /> Add New Service
-      </button>
-
-      <div className='space-y-4'>
-        {loading ? <p className="p-10 text-center text-teal-600 dark:text-teal-400">Loading services...</p> : services.length === 0 ? (
-          <p className="p-10 text-center text-slate-500 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-600 rounded-lg">You haven't listed any services yet.</p>
-        ) : (
-          services.map(service => (
-            <div key={service._id} className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 flex justify-between items-center">
-              <div>
-                <p className='text-lg font-bold text-slate-800 dark:text-white'>{service.title}</p>
-                <p className='text-sm text-slate-600 dark:text-slate-300'>${service.price.toFixed(2)} for {service.durationMinutes} min</p>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${service.isActive
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                  : 'bg-slate-100 text-slate-600 dark:bg-slate-600 dark:text-slate-300'
-                  }`}>
-                  {service.isActive ? 'Active' : 'Hidden'}
-                </span>
-              </div>
-              <div className='space-x-4'>
-                <button onClick={() => setEditingService(service._id)} className='text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors duration-300'>
-                  <FaEdit className='inline mr-1' /> Edit
-                </button>
-                <button onClick={() => handleDeleteService(service._id)} className='text-red-600 dark:text-red-500 hover:text-red-700 dark:hover:text-red-400 font-medium transition-colors duration-300'>
-                  <FaTrash className='inline mr-1' /> Delete
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Service Modal/Form */}
-      {editingService && (
-        <ServiceForm
-          serviceId={editingService === 'new' ? null : editingService}
-          providerId={roleProfile._id}
-          onClose={() => setEditingService(null)}
-          onSuccess={() => { setEditingService(null); fetchData(); }}
-        />
-      )}
-    </div>
-  );
-
-  const renderAnalytics = () => {
-    if (!analyticsData) return <p className="p-10 text-center text-teal-600 dark:text-teal-400">Loading analytics...</p>;
-
-    return (
-      <div className='p-4'>
-        <h3 className='text-2xl font-semibold text-slate-800 dark:text-white mb-3'>Business Analytics</h3>
-        <p className='text-slate-500 dark:text-slate-400 mb-6'>Key performance indicators based on completed bookings.</p>
-        <div className='grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8'>
-          <div className='p-6 bg-blue-50 dark:bg-slate-900 rounded-lg shadow-sm border border-blue-200 dark:border-blue-700'>
-            <p className='text-3xl font-bold text-blue-800 dark:text-blue-200'>{analyticsData.completedBookings} <span className="text-lg text-blue-500">/ {analyticsData.totalBookings}</span></p>
-            <p className='text-sm font-medium text-blue-600 dark:text-blue-300'>Completed / Total Bookings</p>
-          </div>
-          <div className='p-6 bg-green-50 dark:bg-slate-900 rounded-lg shadow-sm border border-green-200 dark:border-green-700'>
-            <p className='text-3xl font-bold text-green-800 dark:text-green-200'>₹{analyticsData.totalRevenue.toLocaleString()}</p>
-            <p className='text-sm font-medium text-green-600 dark:text-green-300'>Total Revenue (Paid)</p>
-          </div>
-          <div className='p-6 bg-yellow-50 dark:bg-slate-900 rounded-lg shadow-sm border border-yellow-200 dark:border-yellow-700'>
-            <p className='text-3xl font-bold text-yellow-800 dark:text-yellow-200'>{analyticsData.averageRating.toFixed(1)} <FaStar className='inline w-6 h-6' /></p>
-            <p className='text-sm font-medium text-yellow-600 dark:text-yellow-300'>Average Rating ({analyticsData.totalReviews})</p>
-          </div>
-        </div>
-
-        <h3 className='text-xl font-semibold text-slate-800 dark:text-white mb-4'>Recent Reviews</h3>
-        {analyticsData.recentReviews && analyticsData.recentReviews.length > 0 ? (
-          <div className="space-y-4">
-            {analyticsData.recentReviews.map(review => (
-              <div key={review._id} className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-semibold text-slate-800 dark:text-white">{review.userId.name}</p>
-                    <div className="flex items-center text-yellow-500 text-sm mt-1">
-                      {[...Array(5)].map((_, i) => (
-                        <FaStar key={i} className={i < review.rating ? "text-yellow-400" : "text-slate-300"} />
-                      ))}
-                      <span className="ml-2 text-slate-500 dark:text-slate-400 text-xs">{new Date(review.createdAt).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                </div>
-                <p className="text-slate-600 dark:text-slate-300 mt-2 text-sm italic">"{review.comment}"</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-slate-500 dark:text-slate-400 italic">No reviews yet.</p>
-        )}
-      </div>
-    );
-  };
-
-  const renderSettings = () => (
-    <div className='p-4'>
-      <ProviderSettings roleProfile={roleProfile} user={user} onUpdate={loadUser} />
-    </div>
-  )
-
-  // Main render logic
-  if (!roleProfile) return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-center">
-      <h2 className="text-2xl font-semibold text-slate-700 dark:text-white">Finalizing your account...</h2>
-      <p className="text-slate-500 dark:text-slate-400 mt-2">Please complete your Tasker profile to manage your services.</p>
-      <div className="mt-8 max-w-2xl mx-auto">
-        <ProviderSettings roleProfile={roleProfile} user={user} onUpdate={loadUser} />
-      </div>
-    </div>
-  );
+  if (!roleProfile) return <div className="p-20 text-center">Loading Profile...</div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <h1 className="text-4xl font-extrabold text-slate-800 dark:text-white mb-6">
-        {roleProfile.businessName} Dashboard
-      </h1>
-
-      {/* Profile/Status Summary */}
-      <div className="bg-white dark:bg-slate-800 shadow-lg rounded-xl p-6 mb-8 border border-slate-200 dark:border-slate-700">
-        <div className="flex items-center space-x-4">
-          <FaUserCheck className={`w-10 h-10 ${roleProfile.isVerified ? 'text-teal-500' : 'text-orange-500'}`} />
-          <div>
-            <h3 className='text-lg font-semibold text-slate-800 dark:text-white'>Verification Status</h3>
-            <p className={`text-sm font-bold ${roleProfile.isVerified ? 'text-teal-600 dark:text-teal-400' : 'text-orange-600 dark:text-orange-400'}`}>
-              {roleProfile.isVerified ? 'Verified Tasker' : 'Pending Verification'}
-            </p>
-          </div>
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-background">
+      {/* SIDEBAR */}
+      <aside className="w-64 border-r border-border bg-card hidden md:flex flex-col">
+        <div className="p-4 border-b border-border">
+          <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Provider Portal</h2>
+          <p className="font-bold text-foreground mt-1 truncate">{roleProfile.businessName}</p>
         </div>
-      </div>
 
-      {/* Navigation Tabs */}
-      <div className='mb-6 border-b border-slate-200 dark:border-slate-700'>
-        <nav className='-mb-px flex space-x-8 overflow-x-auto'>
-          <button onClick={() => setView(TABS.BOOKINGS)} className={`tab-button ${view === TABS.BOOKINGS ? 'active' : ''}`}><FaCalendarCheck className='mr-2' /> Bookings</button>
-          <button onClick={() => setView(TABS.SERVICES)} className={`tab-button ${view === TABS.SERVICES ? 'active' : ''}`}><FaBolt className='mr-2' /> Services</button>
-          <button onClick={() => setView(TABS.ANALYTICS)} className={`tab-button ${view === TABS.ANALYTICS ? 'active' : ''}`}><FaChartLine className='mr-2' /> Analytics</button>
-          <button onClick={() => setView(TABS.SETTINGS)} className={`tab-button ${view === TABS.SETTINGS ? 'active' : ''}`}><FaCog className='mr-2' /> Settings</button>
+        <nav className="flex-1 py-4 space-y-1">
+          <SidebarItem id={TABS.BOOKINGS} icon={FaCalendarCheck} label="Bookings" />
+          <SidebarItem id={TABS.SERVICES} icon={FaListAlt} label="My Services" />
+          <SidebarItem id={TABS.ANALYTICS} icon={FaChartLine} label="Analytics" />
+          <SidebarItem id={TABS.SETTINGS} icon={FaCog} label="Settings" />
         </nav>
-      </div>
 
-      {/* Content Area */}
-      <div className='bg-white dark:bg-slate-800 shadow-lg rounded-xl p-6 border border-slate-200 dark:border-slate-700'>
-        <>
-          {view === TABS.BOOKINGS && renderBookings()}
-          {view === TABS.SERVICES && renderServices()}
-          {view === TABS.ANALYTICS && renderAnalytics()}
-          {view === TABS.SETTINGS && renderSettings()}
-        </>
-      </div>
+        <div className="p-4 border-t border-border">
+          <button onClick={logout} className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors">
+            <FaSignOutAlt className="h-5 w-5" />
+            <span>Log Out</span>
+          </button>
+        </div>
+      </aside>
 
-      {/* Tailwind Style Helper */}
-      <style jsx="true">{`
-          .tab-button {
-            padding: 0.75rem 0.25rem; /* Tighter padding */
-            font-weight: 600; /* Semibold */
-            color: #475569; /* Slate-600 */
-            border-bottom: 3px solid transparent;
-            white-space: nowrap;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            font-size: 1rem; /* Base size */
-          }
-          .tab-button:hover {
-            color: #0d9488; /* Teal-600 */
-            border-color: #94a3b8; /* Slate-400 */
-          }
-          .tab-button.active {
-            color: #0d9488; /* Teal-600 */
-            border-color: #0d9488; /* Teal-600 */
-          }
-          /* Dark Mode Tab Styles */
-          .dark .tab-button {
-            color: #94a3b8; /* Slate-400 */
-            border-color: transparent;
-          }
-          .dark .tab-button:hover {
-            color: #2dd4bf; /* Teal-400 */
-            border-color: #475569; /* Slate-600 */
-          }
-          .dark .tab-button.active {
-            color: #2dd4bf; /* Teal-400 */
-            border-color: #2dd4bf; /* Teal-400 */
-          }
-        `}</style>
+      {/* MAIN CONTENT */}
+      <main className="flex-1 overflow-y-auto bg-muted/10 p-6 md:p-8">
+
+        {/* Verification Banner */}
+        {!roleProfile.isVerified && (
+          <div className="mb-6 p-4 bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200 rounded-lg border border-orange-200 dark:border-orange-800 flex items-center gap-3">
+            <FaUserCheck className="h-5 w-5" />
+            <div>
+              <p className="font-bold">Pending Verification</p>
+              <p className="text-sm">Your account is under review. You can manage services but cannot accept bookings yet.</p>
+            </div>
+          </div>
+        )}
+
+        {view === TABS.BOOKINGS && (
+          <div className="max-w-5xl mx-auto space-y-6">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-bold tracking-tight">Booking Management</h1>
+              <div className="flex bg-card border border-border rounded-lg p-1">
+                {['pending', 'confirmed', 'completed', 'cancelled'].map(status => (
+                  <button
+                    key={status}
+                    onClick={() => setSelectedStatus(status)}
+                    className={cn(
+                      "px-4 py-1.5 text-sm font-medium rounded-md transition-all capitalize",
+                      selectedStatus === status ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {status}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {loading ? <div className="text-center py-20 text-muted-foreground">Loading...</div> : bookings.length === 0 ? (
+              <div className="text-center py-20 border-2 border-dashed border-border rounded-xl">
+                <p className="text-muted-foreground">No {selectedStatus} bookings.</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {bookings.map(booking => (
+                  <div key={booking._id} className="p-6 bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-all">
+                    <div className="flex flex-col md:flex-row justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-bold text-lg text-foreground">{booking.serviceId.title}</span>
+                          <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-secondary text-secondary-foreground border border-border">
+                            ₹{booking.totalPrice.toFixed(2)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-foreground">Customer: {booking.userId.name}</p>
+                        <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                          <FaCalendarCheck /> {new Date(booking.scheduledAt).toLocaleString()}
+                        </p>
+                        {booking.paymentStatus === 'paid' && (
+                          <span className="inline-block mt-2 text-xs font-bold text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full">Paid</span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 mt-2 md:mt-0">
+                        {booking.status === 'pending' && (
+                          <>
+                            <Button size="sm" onClick={() => handleUpdateStatus(booking._id, 'confirmed')} className="bg-green-600 hover:bg-green-700">Accept</Button>
+                            <Button size="sm" variant="outline" onClick={() => handleUpdateStatus(booking._id, 'cancelled')} className="text-destructive border-destructive/50 hover:bg-destructive/10">Decline</Button>
+                          </>
+                        )}
+                        {booking.status === 'confirmed' && (
+                          <>
+                            <Button size="sm" onClick={() => handleUpdateStatus(booking._id, 'completed')}>Complete</Button>
+                            <Button size="sm" variant="outline" onClick={() => handleUpdateStatus(booking._id, 'cancelled')}>Cancel</Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {view === TABS.SERVICES && (
+          <div className="max-w-5xl mx-auto space-y-6">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-bold tracking-tight">My Services</h1>
+              <Button onClick={() => setEditingService('new')}><FaPlusCircle className="mr-2" /> Add Service</Button>
+            </div>
+
+            {loading ? <div className="py-20 text-center text-muted-foreground">Loading...</div> : services.length === 0 ? (
+              <div className="text-center py-20 border-2 border-dashed border-border rounded-xl">
+                <p className="text-muted-foreground">No services listed.</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {services.map(service => (
+                  <div key={service._id} className="flex items-center justify-between p-4 bg-card border border-border rounded-lg shadow-sm">
+                    <div>
+                      <h3 className="font-bold text-foreground">{service.title}</h3>
+                      <p className="text-sm text-muted-foreground">₹{service.price} • {service.durationMinutes} min</p>
+                      <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full", service.isActive ? "bg-green-100 text-green-800" : "bg-muted text-muted-foreground")}>
+                        {service.isActive ? 'Active' : 'Hidden'}
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => setEditingService(service._id)}><FaEdit className="mr-2" /> Edit</Button>
+                      <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => handleDeleteService(service._id)}><FaTrash /></Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {editingService && (
+              <ServiceForm
+                serviceId={editingService === 'new' ? null : editingService}
+                providerId={roleProfile._id}
+                onClose={() => setEditingService(null)}
+                onSuccess={() => { setEditingService(null); fetchData(); }}
+              />
+            )}
+          </div>
+        )}
+
+        {view === TABS.ANALYTICS && analyticsData && (
+          <div className="max-w-5xl mx-auto space-y-8">
+            <h1 className="text-2xl font-bold tracking-tight">Performance</h1>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="p-6 bg-card border border-border rounded-xl shadow-sm">
+                <h3 className="text-sm font-medium text-muted-foreground">Total Revenue</h3>
+                <p className="text-3xl font-bold text-foreground mt-2">₹{analyticsData.totalRevenue.toLocaleString()}</p>
+              </div>
+              <div className="p-6 bg-card border border-border rounded-xl shadow-sm">
+                <h3 className="text-sm font-medium text-muted-foreground">Completed Jobs</h3>
+                <p className="text-3xl font-bold text-foreground mt-2">{analyticsData.completedBookings}</p>
+              </div>
+              <div className="p-6 bg-card border border-border rounded-xl shadow-sm">
+                <h3 className="text-sm font-medium text-muted-foreground">Rating</h3>
+                <div className="flex items-center gap-2 mt-2">
+                  <p className="text-3xl font-bold text-foreground">{analyticsData.averageRating.toFixed(1)}</p>
+                  <FaStar className="text-yellow-400 h-6 w-6" />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {view === TABS.SETTINGS && (
+          <div className="max-w-3xl mx-auto">
+            <ProviderSettings roleProfile={roleProfile} user={user} onUpdate={loadUser} />
+          </div>
+        )}
+
+      </main>
     </div>
   );
 };

@@ -5,6 +5,7 @@ import { GeoSearchControl, OpenStreetMapProvider } from 'leaflet-geosearch';
 import 'leaflet-geosearch/dist/geosearch.css';
 import L from 'leaflet';
 import { FaLocationArrow } from 'react-icons/fa';
+import { Button } from '../ui/Button';
 
 // Fix for default Leaflet marker icons in React
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -176,20 +177,20 @@ const LocationPicker = ({ value, onChange }) => {
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center bg-slate-100 dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
-                <p className="text-sm text-slate-700 dark:text-slate-300 truncate flex-1 mx-2">
+            <div className="flex justify-between items-center bg-muted/40 p-3 rounded-lg border border-border">
+                <p className="text-sm text-foreground truncate flex-1 mx-2 font-medium">
                     {address ? `📍 ${address}` : "Search or tap on map"}
                 </p>
-                <button
+                <Button
                     type="button"
+                    size="sm"
                     onClick={handleLocateMe}
-                    className="flex items-center px-3 py-1.5 bg-teal-600 text-white text-xs font-bold rounded hover:bg-teal-700 transition"
                 >
                     <FaLocationArrow className="mr-1" /> My Location
-                </button>
+                </Button>
             </div>
 
-            <div className="border border-slate-300 dark:border-slate-600 rounded-xl overflow-hidden shadow-sm h-[400px] relative z-0">
+            <div className="border border-border rounded-xl overflow-hidden shadow-sm h-[400px] relative z-0">
                 <MapContainer center={position} zoom={13} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -209,7 +210,7 @@ const LocationPicker = ({ value, onChange }) => {
                     </Marker>
                 </MapContainer>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
                 * You can drag the marker or click on the map to pinpoint your location.
             </p>
         </div>

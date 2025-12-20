@@ -1,69 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { FaSave, FaMapMarkerAlt, FaCalendarAlt, FaUserEdit, FaTrashAlt, FaPlus } from 'react-icons/fa'; // FaInfoCircle is no longer needed
+import { FaSave, FaMapMarkerAlt, FaCalendarAlt, FaUserEdit, FaTrashAlt, FaPlus } from 'react-icons/fa';
 import { coreApi } from '../../api/serviceApi';
 import { toast } from 'react-toastify';
 import LocationPicker from '../../components/common/LocationPicker';
+import { cn } from '../../lib/utils';
+import { Button } from '../../components/ui/Button';
 
 const DAYS = [
-  'Sunday',
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
+  'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
 ];
 
 const buildEmptyWeek = () =>
   DAYS.map((day) => ({
     dayOfWeek: day,
     isAvailable: false,
-    slots: [], // each slot: { startTime: '09:00', endTime: '17:00' }
+    slots: [],
   }));
 
-/**
- * @desc Redesigned component for Providers to update their profile (with Dark Mode).
- */
 const ProviderSettings = ({ roleProfile, user, onUpdate }) => {
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm();
   const [categories, setCategories] = useState([]);
   const [availabilityDays, setAvailabilityDays] = useState(buildEmptyWeek());
-
   const [bufferTime, setBufferTime] = useState(0);
   const [loadingAvailability, setLoadingAvailability] = useState(true);
-
-  // Custom Location State
   const [currentLocation, setCurrentLocation] = useState(null);
 
-  // Define reusable Tailwind classes
-  const labelClass = "block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2";
-  const inputClass = "w-full border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 dark:text-white rounded-lg shadow-sm text-sm p-2.5 focus:ring-2 focus:ring-teal-500 focus:border-teal-500";
-  const errorClass = "mt-1 text-sm text-red-600";
-  const sectionTitleClass = "text-2xl font-bold text-slate-800 dark:text-white border-b border-slate-200 dark:border-slate-700 pb-2 mb-4 flex items-center";
+  // Semantic classes
+  const labelClass = "block text-sm font-semibold text-foreground mb-2";
+  const inputClass = "w-full border border-input bg-background text-foreground rounded-lg shadow-sm text-sm p-2.5 focus:ring-2 focus:ring-primary focus:border-primary";
+  const errorClass = "mt-1 text-sm text-destructive";
+  const sectionTitleClass = "text-2xl font-bold text-foreground border-b border-border pb-2 mb-4 flex items-center";
 
   useEffect(() => {
-    // Load categories from API
     const fetchCategories = async () => {
       try {
         const res = await coreApi.getCategories();
         setCategories(res.data.data);
       } catch (error) {
-        toast.error('Could not load categories for selection.');
+        toast.error('Could not load categories.');
       }
     };
     fetchCategories();
 
-    // Load default form values from current profile
     if (roleProfile) {
       reset({
         businessName: roleProfile.businessName,
         description: roleProfile.description,
-        phone: user.phone || '', // Get phone from base user
-        categories: roleProfile.categories.map(cat => cat._id), // Set default categories
+        phone: user.phone || '',
+        categories: roleProfile.categories.map(cat => cat._id),
       });
 
-      // Initialize location if it exists
       if (roleProfile.location && roleProfile.location.coordinates) {
         setCurrentLocation({
           lat: roleProfile.location.coordinates[1],
@@ -73,12 +60,10 @@ const ProviderSettings = ({ roleProfile, user, onUpdate }) => {
       }
     }
 
-    // Load availability for the logged-in provider
     const fetchAvailability = async () => {
       try {
         const res = await coreApi.getMyAvailability();
         const { days = [], bufferTime: apiBuffer = 0 } = res.data.data || {};
-
         const byDay = new Map(days.map((d) => [d.dayOfWeek, d]));
         const normalized = DAYS.map((day) => {
           const existing = byDay.get(day);
@@ -89,17 +74,12 @@ const ProviderSettings = ({ roleProfile, user, onUpdate }) => {
               slots: Array.isArray(existing.slots) ? existing.slots : [],
             };
           }
-          return {
-            dayOfWeek: day,
-            isAvailable: false,
-            slots: [],
-          };
+          return { dayOfWeek: day, isAvailable: false, slots: [] };
         });
-
         setAvailabilityDays(normalized);
         setBufferTime(apiBuffer);
       } catch (error) {
-        // If there's no availability yet or an error occurs, keep defaults silently
+        // Silent fail
       } finally {
         setLoadingAvailability(false);
       }
@@ -122,13 +102,7 @@ const ProviderSettings = ({ roleProfile, user, onUpdate }) => {
     setAvailabilityDays((prev) =>
       prev.map((day, idx) =>
         idx === dayIndex
-          ? {
-            ...day,
-            slots: [
-              ...day.slots,
-              { startTime: '09:00', endTime: '17:00' },
-            ],
-          }
+          ? { ...day, slots: [...day.slots, { startTime: '09:00', endTime: '17:00' }] }
           : day
       )
     );
@@ -156,30 +130,21 @@ const ProviderSettings = ({ roleProfile, user, onUpdate }) => {
     );
   };
 
-  const handleBufferTimeChange = (e) => {
-    const value = e.target.value;
-    setBufferTime(value === '' ? 0 : Number(value));
-  };
-
   const onSubmit = async (data) => {
     const updateData = {
       businessName: data.businessName,
       description: data.description,
       phone: data.phone,
       categories: data.categories,
-
-      // GeoJSON Location Update
-      location: currentLocation ? {
+      location: (currentLocation?.coordinates || (currentLocation?.lat && currentLocation?.lng)) ? {
         type: 'Point',
-        coordinates: [currentLocation.coordinates.lng, currentLocation.coordinates.lat],
-        formattedAddress: currentLocation.fullAddress
+        coordinates: currentLocation.coordinates
+          ? [currentLocation.coordinates.lng, currentLocation.coordinates.lat]
+          : [currentLocation.lng, currentLocation.lat],
+        formattedAddress: currentLocation.fullAddress || currentLocation.address
       } : undefined,
-
-      // Legacy Address Fields (Synced from LocationPicker)
       address: {
         city_district: currentLocation?.city || '',
-        // We can map other fields if needed, or leave them empty/manual if desired. 
-        // For this task, we assume LocationPicker is the primary source.
         street_address: currentLocation?.fullAddress || ''
       },
     };
@@ -190,32 +155,21 @@ const ProviderSettings = ({ roleProfile, user, onUpdate }) => {
     };
 
     try {
-      // 1. Update Provider Profile (includes businessName, address, categories)
       await coreApi.updateProviderProfile(roleProfile._id, updateData);
-      // 2. Update Availability (provider self-service)
       await coreApi.updateMyAvailability(availabilityPayload);
-
       toast.success('Profile updated successfully!');
-      onUpdate(); // Trigger context update to refresh roleProfile
+      onUpdate();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update profile.');
     }
   };
 
-  // Fallback loading state for stability
-  if (!roleProfile) {
-    return (
-      <div className="p-10 text-center text-teal-600 dark:text-teal-400">
-        Loading business profile settings...
-      </div>
-    );
-  }
-
+  if (!roleProfile) return <div className="p-10 text-center text-muted-foreground">Loading profile...</div>;
 
   return (
     <div className='max-w-4xl'>
       <h2 className={sectionTitleClass}>
-        <FaUserEdit className='mr-3 text-teal-600 dark:text-teal-400' /> Profile Settings
+        <FaUserEdit className='mr-3 text-primary' /> Profile Settings
       </h2>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
@@ -229,7 +183,7 @@ const ProviderSettings = ({ roleProfile, user, onUpdate }) => {
         {/* Phone */}
         <div>
           <label htmlFor="phone" className={labelClass}>Public Phone Number</label>
-          <input id="phone" type="tel" className={inputClass} {...register('phone')} />
+          <input id="phone" type="tel" className={inputClass} placeholder="e.g. +91 9876543210" {...register('phone')} />
         </div>
 
         {/* Description */}
@@ -241,15 +195,15 @@ const ProviderSettings = ({ roleProfile, user, onUpdate }) => {
 
         {/* Categories */}
         <div>
-          <label className={labelClass}>Categories You Serve (select all that apply)</label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-4 border border-slate-300 dark:border-slate-600 rounded-lg max-h-40 overflow-y-auto">
+          <label className={labelClass}>Categories You Serve</label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-4 border border-border rounded-lg max-h-40 overflow-y-auto bg-card">
             {categories.map(cat => (
-              <label key={cat._id} className="flex items-center space-x-2 text-slate-700 dark:text-slate-200">
+              <label key={cat._id} className="flex items-center space-x-2 text-foreground cursor-pointer hover:text-primary transition-colors">
                 <input
                   type="checkbox"
                   value={cat._id}
                   {...register('categories')}
-                  className="h-4 w-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500"
+                  className="h-4 w-4 text-primary rounded border-input focus:ring-primary"
                 />
                 <span>{cat.name}</span>
               </label>
@@ -257,152 +211,113 @@ const ProviderSettings = ({ roleProfile, user, onUpdate }) => {
           </div>
         </div>
 
-        {/* Location Picker Section */}
+        {/* Location Picker */}
         <h3 className={`${sectionTitleClass} pt-4`}>
-          <FaMapMarkerAlt className='mr-3 text-teal-600 dark:text-teal-400' /> Business Location
+          <FaMapMarkerAlt className='mr-3 text-primary' /> Business Location
         </h3>
-
-        <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+        <div className="bg-card p-4 rounded-xl border border-border">
           <LocationPicker
             value={currentLocation}
             onChange={(loc) => setCurrentLocation(loc)}
           />
         </div>
 
-        {/* GEO-COORDINATES REMOVAL: Entire section removed */}
-
+        {/* Availability */}
         <h3 className={`${sectionTitleClass} pt-4`}>
-          <FaCalendarAlt className='mr-3 text-teal-600 dark:text-teal-400' /> Availability & Schedule
+          <FaCalendarAlt className='mr-3 text-primary' /> Availability & Schedule
         </h3>
         <div className="space-y-4">
-          {/* Buffer Time */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
             <div className="sm:col-span-1">
-              <label className={labelClass} htmlFor="bufferTime">
-                Buffer Time (Minutes)
-              </label>
+              <label className={labelClass} htmlFor="bufferTime">Buffer Time (Minutes)</label>
               <input
                 id="bufferTime"
                 type="number"
                 min="0"
                 value={bufferTime}
-                onChange={handleBufferTimeChange}
+                onChange={(e) => setBufferTime(Number(e.target.value))}
                 className={inputClass}
               />
             </div>
-            <div className="sm:col-span-2 text-sm text-slate-500 dark:text-slate-400">
-              Add a small gap between back-to-back bookings to avoid overlaps and give yourself breathing room.
+            <div className="sm:col-span-2 text-sm text-muted-foreground">
+              Gap between bookings to avoid overlap.
             </div>
           </div>
 
           {loadingAvailability ? (
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Loading your current availability...
-            </p>
+            <p className="text-sm text-muted-foreground">Loading availability...</p>
           ) : (
             <div className="space-y-3">
               {availabilityDays.map((day, dayIndex) => (
-                <div
-                  key={day.dayOfWeek}
-                  className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/70 shadow-sm p-4 space-y-3"
-                >
-                  {/* Day header with toggle */}
+                <div key={day.dayOfWeek} className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-sm">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-slate-800 dark:text-slate-100">
-                        {day.dayOfWeek}
-                      </span>
+                      <span className="font-semibold text-foreground">{day.dayOfWeek}</span>
                       {!day.isAvailable && (
-                        <span className="text-xs rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-slate-500 dark:text-slate-400">
-                          Not available
-                        </span>
+                        <span className="text-xs rounded-full bg-muted px-2 py-0.5 text-muted-foreground">Not available</span>
                       )}
                     </div>
                     <button
                       type="button"
                       onClick={() => handleToggleDay(dayIndex)}
-                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-50
-                        ${day.isAvailable ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}
-                      `}
+                      className={cn(
+                        "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+                        day.isAvailable ? 'bg-primary' : 'bg-muted'
+                      )}
                     >
-                      <span
-                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200
-                          ${day.isAvailable ? 'translate-x-5' : 'translate-x-0'}
-                        `}
-                      />
+                      <span className={cn(
+                        "inline-block h-5 w-5 transform rounded-full bg-background shadow ring-0 transition duration-200",
+                        day.isAvailable ? 'translate-x-5' : 'translate-x-0'
+                      )} />
                     </button>
                   </div>
 
-                  {/* Time slots */}
                   {day.isAvailable && (
-                    <div className="space-y-3">
+                    <div className="space-y-3 pl-2 sm:pl-0">
                       {day.slots.length === 0 && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          No time slots added yet. Use &quot;Add Slot&quot; to define your working hours for this day.
-                        </p>
+                        <p className="text-xs text-muted-foreground">No time slots added.</p>
                       )}
                       {day.slots.map((slot, slotIndex) => (
-                        <div
-                          key={slotIndex}
-                          className="flex flex-col sm:flex-row gap-3 sm:items-end"
-                        >
+                        <div key={slotIndex} className="flex flex-col sm:flex-row gap-3 sm:items-end">
                           <div className="flex-1">
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
-                              Start Time
-                            </label>
+                            <label className="block text-xs font-medium text-muted-foreground mb-1">Start</label>
                             <input
                               type="time"
-                              value={slot.startTime || ''}
-                              onChange={(e) =>
-                                handleSlotChange(
-                                  dayIndex,
-                                  slotIndex,
-                                  'startTime',
-                                  e.target.value
-                                )
-                              }
-                              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+                              value={slot.startTime}
+                              onChange={(e) => handleSlotChange(dayIndex, slotIndex, 'startTime', e.target.value)}
+                              className={inputClass}
                             />
                           </div>
                           <div className="flex-1">
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1">
-                              End Time
-                            </label>
+                            <label className="block text-xs font-medium text-muted-foreground mb-1">End</label>
                             <input
                               type="time"
-                              value={slot.endTime || ''}
-                              onChange={(e) =>
-                                handleSlotChange(
-                                  dayIndex,
-                                  slotIndex,
-                                  'endTime',
-                                  e.target.value
-                                )
-                              }
-                              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+                              value={slot.endTime}
+                              onChange={(e) => handleSlotChange(dayIndex, slotIndex, 'endTime', e.target.value)}
+                              className={inputClass}
                             />
                           </div>
-                          <div className="flex-shrink-0">
-                            <button
+                          <div className="flex-shrink-0 pb-1">
+                            <Button
                               type="button"
+                              variant="destructive"
+                              size="sm"
                               onClick={() => handleRemoveSlot(dayIndex, slotIndex)}
-                              className="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium shadow-sm transition-colors"
                             >
-                              <FaTrashAlt className="mr-1" />
-                              Remove
-                            </button>
+                              <FaTrashAlt className="mr-1" /> Remove
+                            </Button>
                           </div>
                         </div>
                       ))}
-
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-primary hover:text-primary/80 hover:bg-primary/10 pl-0"
                         onClick={() => handleAddSlot(dayIndex)}
-                        className="inline-flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
                       >
-                        <FaPlus className="mr-1" />
-                        Add Slot
-                      </button>
+                        <FaPlus className="mr-1" /> Add Slot
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -411,15 +326,14 @@ const ProviderSettings = ({ roleProfile, user, onUpdate }) => {
           )}
         </div>
 
-        {/* Submit Button */}
         <div className="pt-4">
-          <button
+          <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 px-4 bg-teal-600 text-white font-bold rounded-lg hover:bg-teal-700 disabled:opacity-50 transition duration-150 flex justify-center items-center text-base"
+            className="w-full text-lg font-bold py-6 text-primary-foreground"
           >
             {isSubmitting ? 'Saving...' : <><FaSave className='mr-2' /> Save Profile Changes</>}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

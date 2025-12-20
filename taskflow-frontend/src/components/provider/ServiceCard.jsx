@@ -1,9 +1,11 @@
 import React from 'react';
 import { FaStar, FaMapMarkerAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import { Card, CardContent, CardFooter } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
 
 /**
- * @desc Redesigned card component (with Dark Mode).
+ * @desc Redesigned card component.
  */
 const ServiceCard = ({ service }) => {
   if (!service || !service.providerId) return null;
@@ -13,10 +15,10 @@ const ServiceCard = ({ service }) => {
   const rating = provider.ratingAvg ? provider.ratingAvg.toFixed(1) : 'New';
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row">
+    <Card className="flex flex-col md:flex-row overflow-hidden transition-all hover:shadow-lg">
 
       {/* Image Placeholder */}
-      <div className="md:w-1/3 h-48 md:h-auto bg-slate-200 flex-shrink-0">
+      <div className="md:w-1/3 h-48 md:h-auto bg-muted flex-shrink-0 relative">
         <img
           src={service.images[0]?.url || 'https://images.unsplash.com/photo-1517646287270-a5a90701800c?q=80&w=800&auto=format&fit=crop'}
           alt={service.title}
@@ -25,59 +27,60 @@ const ServiceCard = ({ service }) => {
       </div>
 
       {/* Content */}
-      <div className="p-5 md:p-6 flex flex-col justify-between md:w-2/3">
-        <div>
-          <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
-            <Link to={`/service/${service._id}`} className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-300">
-              {service.title}
-            </Link>
-          </h3>
+      <div className="flex flex-col justify-between md:w-2/3">
+        <CardContent className="p-6">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="text-2xl font-bold mb-1">
+                <Link to={`/service/${service._id}`} className="hover:text-primary transition-colors">
+                  {service.title}
+                </Link>
+              </h3>
+              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                {service.description}
+              </p>
+            </div>
+          </div>
 
-          <p className="text-base text-slate-500 dark:text-slate-300 mb-3 line-clamp-2">
-            {service.description}
-          </p>
-
-          <div className="flex items-center space-x-4 text-sm text-slate-600 dark:text-slate-300 mb-4">
-            <p className="flex items-center">
-              <FaMapMarkerAlt className="w-4 h-4 mr-1.5 text-teal-600 dark:text-teal-400" />
+          <div className="flex flex-col space-y-2 mt-2">
+            <div className="flex items-center text-sm text-muted-foreground">
+              <FaMapMarkerAlt className="w-4 h-4 mr-2 text-primary" />
               {service.distance ? (
-                <span className="font-semibold text-teal-700 dark:text-teal-300 mr-1">
-                  {service.distance.toFixed(1)} km from you •
+                <span className="font-semibold text-foreground mr-1">
+                  {service.distance.toFixed(1)} km •
                 </span>
               ) : null}
               {provider.address?.city_district || provider.address?.city || provider.location?.formattedAddress || 'Location Unknown'}
-            </p>
-            <p className="flex items-center">
-              <FaStar className="w-4 h-4 mr-1.5 text-yellow-500" />
-              {rating} Rating ({provider.reviewCount || 0} reviews)
+            </div>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <FaStar className="w-4 h-4 mr-2 text-yellow-500" />
+              <span className="font-medium text-foreground mr-1">{rating}</span>
+              ({provider.reviewCount || 0} reviews)
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Tasker:
+              <Link to={`/provider/${provider._id}`} className='font-medium text-primary hover:underline ml-1'>
+                {providerName}
+              </Link>
+            </div>
+          </div>
+        </CardContent>
+
+        <CardFooter className="bg-muted/30 p-6 pt-4 flex justify-between items-center border-t">
+          <div>
+            <p className="text-2xl font-bold text-foreground">
+              ₹{service.price.toFixed(2)}
+              <span className="text-sm text-muted-foreground font-normal ml-1">
+                / {service.durationMinutes} min
+              </span>
             </p>
           </div>
-
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Tasker:
-            <Link to={`/provider/${provider._id}`} className='font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 hover:underline ml-1'>
-              {providerName}
-            </Link>
-          </p>
-        </div>
-
-        {/* Price and Booking Button */}
-        <div className="mt-5 pt-5 border-t border-slate-100 dark:border-slate-700 flex justify-between items-end">
-          <p className="text-2xl font-extrabold text-slate-800 dark:text-white">
-            ₹{service.price.toFixed(2)}
-            <span className="text-sm text-slate-500 dark:text-slate-400 font-normal ml-1">
-              (for {service.durationMinutes} min)
-            </span>
-          </p>
-          <Link
-            to={`/service/${service._id}`}
-            className="px-5 py-2.5 bg-teal-600 text-white font-semibold rounded-lg shadow-sm hover:bg-teal-700 transition-all duration-300 text-sm"
-          >
-            Book Now
+          <Link to={`/service/${service._id}`}>
+            <Button>Book Now</Button>
           </Link>
-        </div>
+        </CardFooter>
       </div>
-    </div>
+    </Card>
   );
 };
 

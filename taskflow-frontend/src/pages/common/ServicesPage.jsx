@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaWrench, FaBolt, FaHome, FaStar, FaChevronRight } from 'react-icons/fa';
-import { coreApi } from '../../api/serviceApi'; // Import the API
+import { coreApi } from '../../api/serviceApi';
 import { toast } from 'react-toastify';
+import { cn } from '../../lib/utils';
 
 /**
  * @desc Redesigned page to display all available service categories (with Dark Mode).
@@ -12,7 +13,6 @@ const ServicesPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch real categories from the API
   useEffect(() => {
     const fetchCategories = async () => {
       setLoading(true);
@@ -28,58 +28,60 @@ const ServicesPage = () => {
     fetchCategories();
   }, []);
 
-  // FIX: Use 'category' parameter strictly for category filtering, not text search 'query'
   const handleCategoryClick = (categorySlug) => {
     const params = new URLSearchParams();
     if (categorySlug) params.set('category', categorySlug);
     navigate(`/search?${params.toString()}`);
   };
 
-  // Placeholder icons (we can map real icons later if added to schema)
   const iconMap = {
     plumbing: FaWrench,
     electrical: FaBolt,
     cleaning: FaHome,
-    fitness: FaStar, // Placeholder
-    'it-repair': FaStar, // Placeholder
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-4xl font-extrabold text-slate-800 dark:text-white mb-8">
-        All Services
-      </h1>
-      <p className="text-lg text-slate-600 dark:text-slate-300 mb-10">
-        Find the right Tasker for any task, big or small.
-      </p>
-
-      {loading ? (
-        <p className="p-10 text-center text-teal-600 dark:text-teal-400">Loading categories...</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {categories.map((cat) => {
-            const Icon = iconMap[cat.slug] || FaStar;
-            return (
-              <div
-                key={cat._id}
-                className="group bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-lg hover:border-teal-500 dark:hover:border-teal-500 transition duration-300 cursor-pointer flex items-center justify-between"
-                onClick={() => handleCategoryClick(cat.slug)}
-              >
-                <div className="flex items-center">
-                  <Icon className="w-10 h-10 text-teal-600 dark:text-teal-400 mr-5" />
-                  <div>
-                    <h3 className="text-xl font-semibold text-slate-800 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition duration-300">
-                      {cat.name}
-                    </h3>
-                    <p className="text-slate-500 dark:text-slate-400">{cat.desc || `Find professionals for ${cat.name}.`}</p>
-                  </div>
-                </div>
-                <FaChevronRight className="text-slate-400 dark:text-slate-500 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition duration-300" />
-              </div>
-            );
-          })}
+    <div className="min-h-screen bg-background py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h1 className="text-4xl font-extrabold text-foreground mb-4">
+            All Services
+          </h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Find the right Tasker for any task, big or small.
+          </p>
         </div>
-      )}
+
+        {loading ? (
+          <p className="p-20 text-center text-muted-foreground text-lg">Loading categories...</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {categories.map((cat) => {
+              const Icon = iconMap[cat.slug] || FaStar;
+              return (
+                <div
+                  key={cat._id}
+                  className="group bg-card p-6 rounded-xl border border-border hover:shadow-lg hover:border-primary/50 transition-all duration-300 cursor-pointer flex items-center justify-between"
+                  onClick={() => handleCategoryClick(cat.slug)}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-full bg-secondary group-hover:bg-primary/10 transition-colors">
+                      <Icon className="w-6 h-6 text-foreground group-hover:text-primary transition-colors" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+                        {cat.name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground line-clamp-1">{cat.desc || `Find professionals for ${cat.name}.`}</p>
+                    </div>
+                  </div>
+                  <FaChevronRight className="text-muted-foreground group-hover:text-primary transition-colors" />
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
