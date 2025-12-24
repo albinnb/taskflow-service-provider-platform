@@ -329,39 +329,39 @@ const importData = async () => {
 
     const servicesPayload = [
       // -- CLEANING (Provider 0 & 1) --
-      { providerIdx: 0, title: 'Deep Home Cleaning', description: 'Full sanitation of floors, bathrooms, and kitchen.', price: 150, duration: 180, category: cleaningCat },
-      { providerIdx: 0, title: 'Sofa & Carpet Shampoo', description: 'Remove stains and dust mites from upholstery.', price: 80, duration: 90, category: cleaningCat },
-      { providerIdx: 0, title: 'Curtain Steaming', description: 'Steam clean curtains without removal.', price: 50, duration: 60, category: cleaningCat },
-      { providerIdx: 1, title: 'Eco-Friendly Kitchen Clean', description: 'Detailed kitchen cleaning using organic products.', price: 120, duration: 120, category: cleaningCat },
-      { providerIdx: 1, title: 'Move-Out Cleaning', description: 'Empty house cleaning for tenants leaving an apartment.', price: 200, duration: 240, category: cleaningCat },
+      { providerIdx: 0, title: 'Deep Home Cleaning', description: 'Full sanitation of floors, bathrooms, and kitchen.', price: 150, duration: 180, category: cleaningCat, images: [{ url: 'https://images.unsplash.com/photo-1737372805905-be0b91ec86fb?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8RGVlcCUyMEhvbWUlMjBDbGVhbmluZ3xlbnwwfHwwfHx8MA%3D%3D' }] },
+      { providerIdx: 0, title: 'Sofa & Carpet Shampoo', description: 'Remove stains and dust mites from upholstery.', price: 80, duration: 90, category: cleaningCat, images: [{ url: 'https://media.istockphoto.com/id/1278602119/photo/hand-cleaning-a-sofa-with-steam-cleaner-home-cleaning-concept.jpg?s=612x612&w=0&k=20&c=vj2_wjVHi58S5qEXTJQ2oq1J-7ITxgdM7r5IPkkFfcc=' }] },
+      { providerIdx: 0, title: 'Curtain Steaming', description: 'Steam clean curtains without removal.', price: 50, duration: 60, category: cleaningCat, images: [{ url: 'https://plus.unsplash.com/premium_photo-1678304223886-7a5c1aff211d?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8Q3VydGFpbiUyMFN0ZWFtaW5nfGVufDB8fDB8fHww' }] },
+      { providerIdx: 1, title: 'Eco-Friendly Kitchen Clean', description: 'Detailed kitchen cleaning using organic products.', price: 120, duration: 120, category: cleaningCat, images: [{ url: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=800&q=80' }] },
+      { providerIdx: 1, title: 'Move-Out Cleaning', description: 'Empty house cleaning for tenants leaving an apartment.', price: 200, duration: 240, category: cleaningCat, images: [{ url: 'https://images.unsplash.com/photo-1758273705601-50b1b61f7e6c?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8TW92ZS1PdXQlMjBDbGVhbmluZ3xlbnwwfHwwfHx8MA%3D%3D' }] },
 
       // -- FITNESS (Provider 2 & 3) --
-      { providerIdx: 2, title: 'Personal Training Session', description: 'One-hour strength and conditioning session.', price: 70, duration: 60, category: fitnessCat },
-      { providerIdx: 2, title: 'Group HIIT Class', description: 'High Intensity Interval Training for groups.', price: 30, duration: 45, category: fitnessCat },
-      { providerIdx: 2, title: 'Nutrition Consultation', description: 'Diet planning and macro breakdown analysis.', price: 50, duration: 30, category: fitnessCat },
-      { providerIdx: 3, title: 'Private Yoga Class', description: 'Personalized yoga flow for flexibility and peace.', price: 60, duration: 60, category: fitnessCat },
-      { providerIdx: 3, title: 'Meditation Workshop', description: 'Guided mindfulness and breathing techniques.', price: 40, duration: 60, category: fitnessCat },
+      { providerIdx: 2, title: 'Personal Training Session', description: 'One-hour strength and conditioning session.', price: 70, duration: 60, category: fitnessCat, images: [{ url: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=80' }] },
+      { providerIdx: 2, title: 'Group HIIT Class', description: 'High Intensity Interval Training for groups.', price: 30, duration: 45, category: fitnessCat, images: [{ url: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80' }] },
+      { providerIdx: 2, title: 'Nutrition Consultation', description: 'Diet planning and macro breakdown analysis.', price: 50, duration: 30, category: fitnessCat, images: [{ url: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80' }] },
+      { providerIdx: 3, title: 'Private Yoga Class', description: 'Personalized yoga flow for flexibility and peace.', price: 60, duration: 60, category: fitnessCat, images: [{ url: 'https://images.unsplash.com/photo-1714646442347-5588041f9cc9?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1yZWxhdGVkfDQ5fHx8ZW58MHx8fHx8' }] },
+      { providerIdx: 3, title: 'Meditation Workshop', description: 'Guided mindfulness and breathing techniques.', price: 40, duration: 60, category: fitnessCat, images: [{ url: 'https://images.unsplash.com/photo-1559595500-e15296bdbb48?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8TWVkaXRhdGlvbnxlbnwwfHwwfHx8MA%3D%3D' }] },
 
       // -- IT REPAIR (Provider 4 & 5) --
-      { providerIdx: 4, title: 'Laptop Screen Repair', description: 'Replacement of cracked or broken laptop screens.', price: 100, duration: 120, category: itCat },
-      { providerIdx: 4, title: 'OS Formatting & Reinstall', description: 'Clean install of Windows/Mac/Linux OS.', price: 50, duration: 90, category: itCat },
-      { providerIdx: 4, title: 'Data Recovery', description: 'Attempt to recover lost files from hard drives.', price: 150, duration: 240, category: itCat },
-      { providerIdx: 5, title: 'Motherboard Chip-Level Fix', description: 'Advanced soldering and component replacement.', price: 200, duration: 180, category: itCat },
-      { providerIdx: 5, title: 'Thermal Paste Re-application', description: 'Fix overheating issues by cleaning cooling fans.', price: 40, duration: 60, category: itCat },
+      { providerIdx: 4, title: 'Laptop Screen Repair', description: 'Replacement of cracked or broken laptop screens.', price: 100, duration: 120, category: itCat, images: [{ url: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&q=80' }] },
+      { providerIdx: 4, title: 'OS Formatting & Reinstall', description: 'Clean install of Windows/Mac/Linux OS.', price: 50, duration: 90, category: itCat, images: [{ url: 'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=800&q=80' }] },
+      { providerIdx: 4, title: 'Data Recovery', description: 'Attempt to recover lost files from hard drives.', price: 150, duration: 240, category: itCat, images: [{ url: 'https://images.unsplash.com/photo-1591913139332-f8172ef511da?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8RGF0YSUyMFJlY292ZXJ5fGVufDB8fDB8fHww' }] },
+      { providerIdx: 5, title: 'Motherboard Chip-Level Fix', description: 'Advanced soldering and component replacement.', price: 200, duration: 180, category: itCat, images: [{ url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80' }] },
+      { providerIdx: 5, title: 'Thermal Paste Re-application', description: 'Fix overheating issues by cleaning cooling fans.', price: 40, duration: 60, category: itCat, images: [{ url: 'https://media.istockphoto.com/id/1170065665/photo/close-up-of-silicone-cpu-or-thermal-compound-on-mainboard-electronic-computer.jpg?s=612x612&w=0&k=20&c=_vQRBVef6Zv7a6c17JgBd6ByTyfKs8I_3Kox22LTL0Q=' }] },
 
       // -- PLUMBING (Provider 6 & 7) --
-      { providerIdx: 6, title: 'Leak Fix - Pipe Burst', description: 'Emergency repair for burst or leaking pipes.', price: 90, duration: 60, category: plumbingCat },
-      { providerIdx: 6, title: 'Tap & Faucet Installation', description: 'Replace old taps with new modern fittings.', price: 40, duration: 30, category: plumbingCat },
-      { providerIdx: 6, title: 'Water Tank Cleaning', description: 'Hygienic cleaning of overhead water tanks.', price: 80, duration: 120, category: plumbingCat },
-      { providerIdx: 7, title: 'Bathroom Plumbing Setup', description: 'Complete piping for a new bathroom renovation.', price: 500, duration: 480, category: plumbingCat },
-      { providerIdx: 7, title: 'Drain Unclogging', description: 'Remove blockages from washbasins and sinks.', price: 60, duration: 45, category: plumbingCat },
+      { providerIdx: 6, title: 'Leak Fix - Pipe Burst', description: 'Emergency repair for burst or leaking pipes.', price: 90, duration: 60, category: plumbingCat, images: [{ url: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=800&q=80' }] },
+      { providerIdx: 6, title: 'Tap & Faucet Installation', description: 'Replace old taps with new modern fittings.', price: 40, duration: 30, category: plumbingCat, images: [{ url: 'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=800&q=80' }] },
+      { providerIdx: 6, title: 'Water Tank Cleaning', description: 'Hygienic cleaning of overhead water tanks.', price: 80, duration: 120, category: plumbingCat, images: [{ url: 'https://images.unsplash.com/photo-1620653713380-7a34b773fef8?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fHdhdGVyJTIwdGFuayUyMGNsZWFuaW5nfGVufDB8fDB8fHww' }] },
+      { providerIdx: 7, title: 'Bathroom Plumbing Setup', description: 'Complete piping for a new bathroom renovation.', price: 500, duration: 480, category: plumbingCat, images: [{ url: 'https://media.istockphoto.com/id/1322665946/photo/male-worker-checking-cables.jpg?s=612x612&w=0&k=20&c=7Cj8-EFPAguNCUZ1-aXRLUa0r2Gb9DtMQ2LWsXJN1xk=' }] },
+      { providerIdx: 7, title: 'Drain Unclogging', description: 'Remove blockages from washbasins and sinks.', price: 60, duration: 45, category: plumbingCat, images: [{ url: 'https://images.unsplash.com/photo-1628177142898-93e36e4e3a50?w=800&q=80' }] },
 
       // -- ELECTRICAL (Provider 8 & 9) --
-      { providerIdx: 8, title: 'House Wiring Check', description: 'Complete inspection of home electrical safety.', price: 100, duration: 90, category: electricalCat },
-      { providerIdx: 8, title: 'Inverter Installation', description: 'Setup for power backup inverters and batteries.', price: 80, duration: 60, category: electricalCat },
-      { providerIdx: 8, title: 'Ceiling Fan Install', description: 'Assembly and mounting of ceiling fans.', price: 30, duration: 45, category: electricalCat },
-      { providerIdx: 9, title: 'Fuse Board Upgrade', description: 'Replace old fuses with modern MCB panels.', price: 250, duration: 240, category: electricalCat },
-      { providerIdx: 9, title: 'Smart Light Setup', description: 'Installation and config of WiFi smart bulbs/switches.', price: 120, duration: 120, category: electricalCat },
+      { providerIdx: 8, title: 'House Wiring Check', description: 'Complete inspection of home electrical safety.', price: 100, duration: 90, category: electricalCat, images: [{ url: 'https://plus.unsplash.com/premium_photo-1675662137471-13de7becb59e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8RHJhaW4lMjBVbmNsb2dnaW5nfGVufDB8fDB8fHww' }] },
+      { providerIdx: 8, title: 'Inverter Installation', description: 'Setup for power backup inverters and batteries.', price: 80, duration: 60, category: electricalCat, images: [{ url: 'https://plus.unsplash.com/premium_photo-1682148183600-37cd45353dd0?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8SW52ZXJ0ZXIlMjBJbnN0YWxsYXRpb258ZW58MHx8MHx8fDA%3D' }] },
+      { providerIdx: 8, title: 'Ceiling Fan Install', description: 'Assembly and mounting of ceiling fans.', price: 30, duration: 45, category: electricalCat, images: [{ url: 'https://images.unsplash.com/photo-1609519479841-5fd3b2884e17?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2VpbGluZyUyMGZhbnxlbnwwfHwwfHx8MA%3D%3D' }] },
+      { providerIdx: 9, title: 'Fuse Board Upgrade', description: 'Replace old fuses with modern MCB panels.', price: 250, duration: 240, category: electricalCat, images: [{ url: 'https://plus.unsplash.com/premium_photo-1682928136660-8cbeaf4941b2?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8ZnVzZSUyMGJvYXJkfGVufDB8fDB8fHww' }] },
+      { providerIdx: 9, title: 'Smart Light Setup', description: 'Installation and config of WiFi smart bulbs/switches.', price: 120, duration: 120, category: electricalCat, images: [{ url: 'https://images.unsplash.com/photo-1558211583-d26f610c1eb1?w=800&q=80' }] },
     ];
 
     const dbServices = [];
@@ -376,7 +376,8 @@ const importData = async () => {
           price: req.price,
           durationMinutes: req.duration,
           isActive: true,
-          approvalStatus: 'approved'
+          approvalStatus: 'approved',
+          images: req.images // Add images here
         });
       }
       dbServices.push(sc);

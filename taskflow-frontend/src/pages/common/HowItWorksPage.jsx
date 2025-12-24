@@ -35,36 +35,51 @@ const HowItWorksPage = () => {
 
                 <div className="grid md:grid-cols-3 gap-8">
                     {/* Step 1 */}
-                    <div className="bg-card p-8 rounded-xl border border-border flex flex-col items-center text-center shadow-sm hover:shadow-md transition-shadow">
-                        <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-6">
-                            <FaSearch className="w-8 h-8" />
+                    <div className="bg-card rounded-xl border border-border flex flex-col items-center text-center shadow-sm hover:shadow-lg transition-all overflow-hidden group">
+                        <div className="h-48 w-full overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&auto=format&fit=crop&q=60" alt="Find" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                         </div>
-                        <h3 className="text-xl font-bold mb-3">1. Find a Tasker</h3>
-                        <p className="text-muted-foreground">
-                            Search for the service you need. Filter by price, rating, and location to find the perfect match.
-                        </p>
+                        <div className="p-6">
+                            <h3 className="text-xl font-bold mb-3 flex items-center justify-center gap-2">
+                                <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
+                                Find a Tasker
+                            </h3>
+                            <p className="text-muted-foreground">
+                                Search for the service you need. Filter by price, rating, and location to find the perfect match.
+                            </p>
+                        </div>
                     </div>
 
                     {/* Step 2 */}
-                    <div className="bg-card p-8 rounded-xl border border-border flex flex-col items-center text-center shadow-sm hover:shadow-md transition-shadow">
-                        <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-6">
-                            <FaCalendarCheck className="w-8 h-8" />
+                    <div className="bg-card rounded-xl border border-border flex flex-col items-center text-center shadow-sm hover:shadow-lg transition-all overflow-hidden group">
+                        <div className="h-48 w-full overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=500&auto=format&fit=crop&q=60" alt="Book" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                         </div>
-                        <h3 className="text-xl font-bold mb-3">2. Book & Schedule</h3>
-                        <p className="text-muted-foreground">
-                            Choose a date and time that works for you. Describe your task and book instantly.
-                        </p>
+                        <div className="p-6">
+                            <h3 className="text-xl font-bold mb-3 flex items-center justify-center gap-2">
+                                <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
+                                Book & Schedule
+                            </h3>
+                            <p className="text-muted-foreground">
+                                Choose a date and time that works for you. Describe your task and book instantly.
+                            </p>
+                        </div>
                     </div>
 
                     {/* Step 3 */}
-                    <div className="bg-card p-8 rounded-xl border border-border flex flex-col items-center text-center shadow-sm hover:shadow-md transition-shadow">
-                        <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-6">
-                            <FaCreditCard className="w-8 h-8" />
+                    <div className="bg-card rounded-xl border border-border flex flex-col items-center text-center shadow-sm hover:shadow-lg transition-all overflow-hidden group">
+                        <div className="h-48 w-full overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1556742111-a301076d9d18?w=800&q=80" alt="Pay" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                         </div>
-                        <h3 className="text-xl font-bold mb-3">3. Pay Securely</h3>
-                        <p className="text-muted-foreground">
-                            Pay through our secure platform only when the job is done. Leave a review to help others.
-                        </p>
+                        <div className="p-6">
+                            <h3 className="text-xl font-bold mb-3 flex items-center justify-center gap-2">
+                                <span className="bg-primary/10 text-primary w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span>
+                                Pay Securely
+                            </h3>
+                            <p className="text-muted-foreground">
+                                Pay through our secure platform only when the job is done. Leave a review to help others.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -79,36 +94,51 @@ const HowItWorksPage = () => {
 
                     <div className="grid md:grid-cols-3 gap-8">
                         {/* Step 1 */}
-                        <div className="bg-card p-8 rounded-xl border border-border flex flex-col items-center text-center shadow-sm hover:shadow-md transition-shadow">
-                            <div className="w-16 h-16 bg-green-500/10 text-green-600 rounded-full flex items-center justify-center mb-6">
-                                <FaUserCheck className="w-8 h-8" />
+                        <div className="bg-card rounded-xl border border-border flex flex-col items-center text-center shadow-sm hover:shadow-lg transition-all overflow-hidden group">
+                            <div className="h-48 w-full overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=500&auto=format&fit=crop&q=60" alt="Profile" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                             </div>
-                            <h3 className="text-xl font-bold mb-3">1. Build Your Profile</h3>
-                            <p className="text-muted-foreground">
-                                Sign up as a provider, list your skills, set your rates, and showcase your experience.
-                            </p>
+                            <div className="p-6">
+                                <h3 className="text-xl font-bold mb-3 flex items-center justify-center gap-2">
+                                    <span className="bg-green-500/10 text-green-600 w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
+                                    Build Your Profile
+                                </h3>
+                                <p className="text-muted-foreground">
+                                    Sign up as a provider, list your skills, set your rates, and showcase your experience.
+                                </p>
+                            </div>
                         </div>
 
                         {/* Step 2 */}
-                        <div className="bg-card p-8 rounded-xl border border-border flex flex-col items-center text-center shadow-sm hover:shadow-md transition-shadow">
-                            <div className="w-16 h-16 bg-green-500/10 text-green-600 rounded-full flex items-center justify-center mb-6">
-                                <FaBriefcase className="w-8 h-8" />
+                        <div className="bg-card rounded-xl border border-border flex flex-col items-center text-center shadow-sm hover:shadow-lg transition-all overflow-hidden group">
+                            <div className="h-48 w-full overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1521791136064-7986c2920216?w=500&auto=format&fit=crop&q=60" alt="Accept" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                             </div>
-                            <h3 className="text-xl font-bold mb-3">2. Accept Jobs</h3>
-                            <p className="text-muted-foreground">
-                                Receive booking requests from nearby customers. Accept the ones that fit your schedule.
-                            </p>
+                            <div className="p-6">
+                                <h3 className="text-xl font-bold mb-3 flex items-center justify-center gap-2">
+                                    <span className="bg-green-500/10 text-green-600 w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
+                                    Accept Jobs
+                                </h3>
+                                <p className="text-muted-foreground">
+                                    Receive booking requests from nearby customers. Accept the ones that fit your schedule.
+                                </p>
+                            </div>
                         </div>
 
                         {/* Step 3 */}
-                        <div className="bg-card p-8 rounded-xl border border-border flex flex-col items-center text-center shadow-sm hover:shadow-md transition-shadow">
-                            <div className="w-16 h-16 bg-green-500/10 text-green-600 rounded-full flex items-center justify-center mb-6">
-                                <FaMoneyBillWave className="w-8 h-8" />
+                        <div className="bg-card rounded-xl border border-border flex flex-col items-center text-center shadow-sm hover:shadow-lg transition-all overflow-hidden group">
+                            <div className="h-48 w-full overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1579621970795-87facc2f976d?w=500&auto=format&fit=crop&q=60" alt="Money" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                             </div>
-                            <h3 className="text-xl font-bold mb-3">3. Get Paid</h3>
-                            <p className="text-muted-foreground">
-                                Complete the task and get paid directly to your bank account. Build your reputation with great reviews.
-                            </p>
+                            <div className="p-6">
+                                <h3 className="text-xl font-bold mb-3 flex items-center justify-center gap-2">
+                                    <span className="bg-green-500/10 text-green-600 w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span>
+                                    Get Paid
+                                </h3>
+                                <p className="text-muted-foreground">
+                                    Complete the task and get paid directly to your bank account. Build your reputation with great reviews.
+                                </p>
+                            </div>
                         </div>
                     </div>
 

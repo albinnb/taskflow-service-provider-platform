@@ -40,6 +40,13 @@ const ServicesPage = () => {
     cleaning: FaHome,
   };
 
+  const imageMap = {
+    plumbing: 'https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=500&auto=format&fit=crop&q=60',
+    electrical: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?w=500&auto=format&fit=crop&q=60',
+    cleaning: 'https://images.unsplash.com/photo-1627905646269-7f034dcc5738?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2xlYW5pbmclMjBzZXJ2aWNlc3xlbnwwfHwwfHx8MA%3D%3D',
+    moving: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=500&auto=format&fit=crop&q=60',
+  };
+
   return (
     <div className="min-h-screen bg-background py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -58,24 +65,28 @@ const ServicesPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {categories.map((cat) => {
               const Icon = iconMap[cat.slug] || FaStar;
+              const imageUrl = imageMap[cat.slug] || 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=500&auto=format&fit=crop&q=60';
+
               return (
                 <div
                   key={cat._id}
-                  className="group bg-card p-6 rounded-xl border border-border hover:shadow-lg hover:border-primary/50 transition-all duration-300 cursor-pointer flex items-center justify-between"
+                  className="group bg-card rounded-xl border border-border hover:shadow-lg hover:border-primary/50 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col"
                   onClick={() => handleCategoryClick(cat.slug)}
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-full bg-secondary group-hover:bg-primary/10 transition-colors">
-                      <Icon className="w-6 h-6 text-foreground group-hover:text-primary transition-colors" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
-                        {cat.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-1">{cat.desc || `Find professionals for ${cat.name}.`}</p>
+                  <div className="h-48 overflow-hidden relative">
+                    <img src={imageUrl} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                    <div className="absolute bottom-4 left-4 text-white flex items-center gap-3">
+                      <div className="p-2 rounded-full bg-white/20 backdrop-blur-sm">
+                        <Icon className="w-5 h-5 text-white" />
+                      </div>
+                      <h3 className="text-xl font-bold">{cat.name}</h3>
                     </div>
                   </div>
-                  <FaChevronRight className="text-muted-foreground group-hover:text-primary transition-colors" />
+                  <div className="p-6 flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground line-clamp-2">{cat.desc || `Find professionals for ${cat.name}.`}</p>
+                    <FaChevronRight className="text-muted-foreground group-hover:text-primary transition-colors text-lg" />
+                  </div>
                 </div>
               );
             })}

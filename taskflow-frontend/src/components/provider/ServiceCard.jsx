@@ -20,9 +20,10 @@ const ServiceCard = ({ service }) => {
       {/* Image Placeholder */}
       <div className="md:w-1/3 h-48 md:h-auto bg-muted flex-shrink-0 relative">
         <img
-          src={service.images[0]?.url || 'https://images.unsplash.com/photo-1517646287270-a5a90701800c?q=80&w=800&auto=format&fit=crop'}
+          src={service.images && service.images[0]?.url ? service.images[0].url : 'https://images.unsplash.com/photo-1517646287270-a5a90701800c?q=80&w=800&auto=format&fit=crop'}
           alt={service.title}
           className="w-full h-full object-cover"
+          onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/600x400?text=No+Image'; }} // Fallback generic logo/image
         />
       </div>
 

@@ -24,6 +24,7 @@ import categoryRoutes from './routes/categoryRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js'; // Payment
 import availabilityRoutes from './routes/availabilityRoutes.js';
 import disputeRoutes from './routes/disputeRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 
 // Connect to MongoDB (Must run AFTER dotenv.config())
 connectDB();
@@ -41,6 +42,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static('uploads'));
 app.use(cookieParser());
 
 if (process.env.NODE_ENV === 'development') {
@@ -62,6 +64,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/availability', availabilityRoutes);
 app.use('/api/disputes', disputeRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // === ERROR HANDLING MIDDLEWARE ===
 app.use(notFound);

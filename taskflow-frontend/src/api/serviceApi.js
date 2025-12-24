@@ -34,6 +34,9 @@ export const coreApi = {
   createService: (data) => axiosClient.post('/services', data),
   updateService: (id, data) => axiosClient.put(`/services/${id}`, data),
   deleteService: (id) => axiosClient.delete(`/services/${id}`),
+  uploadImage: (formData) => axiosClient.post('/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
 
   // --- Booking Management ---
   // --- Payment (Razorpay) ---
