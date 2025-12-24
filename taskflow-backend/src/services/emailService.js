@@ -29,7 +29,7 @@ const sendEmail = async (options) => {
   }
 
   const mailOptions = {
-    from: process.env.EMAIL_FROM,
+    from: options.from || process.env.EMAIL_FROM || 'aalbinbabupaduppu@gmail.com', // Use user preference if not env
     to: options.email,
     subject: options.subject,
     html: options.message,
@@ -102,4 +102,69 @@ const sendBookingConfirmation = async (customer, providerUser, booking, service)
   });
 };
 
-export { sendEmail, sendBookingConfirmation };
+/**
+ * @desc Sends a ban notification to the user
+ */
+const sendBanNotification = async (user) => {
+  const subject = 'LocalLink: Account Suspension Notice';
+  const message = `
+    <h1>Account Suspended</h1>
+    <p>Dear ${user.name},</p>
+    <p>We are writing to inform you that your LocalLink account has been suspended due to violations of our Terms of Service.</p>
+    <p>If you believe this is an error, please contact our support team.</p>
+    <p>Regards,<br>LocalLink Team</p>
+  `;
+
+  await sendEmail({
+    email: user.email,
+    subject: subject,
+    message: message,
+    from: 'aalbinbabupaduppu@gmail.com'
+  });
+};
+
+/**
+ * @desc Sends dispute resolution emails to both parties
+ */
+const sendDisputeResolution = async (dispute, customer, providerUser) => {
+  const subject = `LocalLink: Dispute Resolved (Booking #${dispute.bookingId._id ? dispute.bookingId._id.toString().slice(-6) : 'N/A'})`;
+
+  // 1. Email to Customer
+  const customerMessage = `
+    <h1>Dispute Update</h1>
+    <p>Dear ${customer.name},</p>
+    <p>The dispute regarding your booking has been reviewed and resolved.</p>
+    <ul>
+        <li><strong>Resolution Status:</strong> ${dispute.status.toUpperCase()}</li>
+    </ul>
+    <p>Thank you for your patience.</p>
+    <p>Regards,<br>LocalLink Team</p>
+  `;
+
+  await sendEmail({
+    email: customer.email,
+    subject: subject,
+    message: customerMessage,
+    from: 'aalbinbabupaduppu@gmail.com'
+  });
+
+  // 2. Email to Provider
+  const providerMessage = `
+    <h1>Dispute Update</h1>
+    <p>Dear ${providerUser.name},</p>
+    <p>The dispute regarding a booking has been reviewed and resolved.</p>
+    <ul>
+        <li><strong>Resolution Status:</strong> ${dispute.status.toUpperCase()}</li>
+    </ul>
+    <p>Regards,<br>LocalLink Team</p>
+  `;
+
+  await sendEmail({
+    email: providerUser.email,
+    subject: subject,
+    message: providerMessage,
+    from: 'aalbinbabupaduppu@gmail.com'
+  });
+};
+
+export { sendEmail, sendBookingConfirmation, sendBanNotification, sendDisputeResolution };

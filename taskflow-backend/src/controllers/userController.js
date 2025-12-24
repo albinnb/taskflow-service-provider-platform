@@ -2,6 +2,7 @@ import { validationResult } from 'express-validator';
 import User from '../models/User.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { generateToken } from '../utils/jwt.js';
+import { sendBanNotification } from '../services/emailService.js';
 
 // ------------------------------------------------------------------
 // NEW CONTROLLER: Update User Address (for self-update)
@@ -160,6 +161,10 @@ const updateUser = asyncHandler(async (req, res) => {
         user.address = req.body.address || user.address;
 
         if (req.body.hasOwnProperty('isBanned')) {
+            // Check if status is changing to Banned
+            if (req.body.isBanned === true && user.isBanned === false) {
+                await sendBanNotification(user);
+            }
             user.isBanned = req.body.isBanned;
         }
 

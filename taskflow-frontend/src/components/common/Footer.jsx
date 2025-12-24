@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaFacebook, FaTwitter, FaInstagram } from 'react-icons/fa';
+import { FaInstagram, FaGithub, FaTelegram } from 'react-icons/fa';
 import useAuth from '../../hooks/useAuth';
 
 /**
@@ -19,9 +19,9 @@ const Footer = () => {
           <div className="col-span-2 md:col-span-1">
             <h5 className="text-xl font-bold text-foreground mb-4">TaskFlow</h5>
             <div className="flex space-x-4">
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors"><FaTwitter className="h-5 w-5" /></a>
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors"><FaFacebook className="h-5 w-5" /></a>
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors"><FaInstagram className="h-5 w-5" /></a>
+              <a href="https://www.instagram.com/albinn_b_/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors"><FaInstagram className="h-5 w-5" /></a>
+              <a href="https://github.com/albinnb" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors"><FaGithub className="h-5 w-5" /></a>
+              <a href="https://t.me/albinnb" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors"><FaTelegram className="h-5 w-5" /></a>
             </div>
           </div>
 

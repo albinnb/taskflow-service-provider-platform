@@ -82,4 +82,13 @@ export const coreApi = {
   createDispute: (data) => axiosClient.post('/disputes', data),
   getDisputes: () => axiosClient.get('/disputes'),
   resolveDispute: (id, data) => axiosClient.put(`/disputes/${id}`, data),
+  resolveDispute: (id, data) => axiosClient.put(`/disputes/${id}`, data),
+};
+
+// --- Chat API ---
+export const chatApi = {
+  getChats: () => axiosClient.get('/chats'),
+  getMessages: (chatId) => axiosClient.get(`/chats/${chatId}`),
+  createChat: (targetUserId) => axiosClient.post('/chats', { targetUserId }),
+  markAsRead: (chatId) => axiosClient.put(`/chats/${chatId}/read`),
 };

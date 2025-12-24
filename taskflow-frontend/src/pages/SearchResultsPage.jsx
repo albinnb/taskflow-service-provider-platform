@@ -35,6 +35,7 @@ const SearchResultsPage = () => {
     const [loading, setLoading] = useState(true);
     const [totalCount, setTotalCount] = useState(0);
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
+    const [showFilters, setShowFilters] = useState(false);
 
     const [filters, setFilters] = useState({
         query: searchParams.get('query') || '',
@@ -144,8 +145,20 @@ const SearchResultsPage = () => {
 
                 <div className="flex flex-col lg:flex-row gap-8">
 
+                    {/* Mobile Filter Toggle */}
+                    <div className="lg:hidden w-full">
+                        <Button
+                            onClick={() => setShowFilters(!showFilters)}
+                            variant="outline"
+                            className="w-full justify-between"
+                        >
+                            <span>Filters & Sorting</span>
+                            <span className="text-xs text-muted-foreground">{showFilters ? 'Hide' : 'Show'}</span>
+                        </Button>
+                    </div>
+
                     {/* Filter Sidebar */}
-                    <div className="lg:w-1/4">
+                    <div className={`lg:w-1/4 ${showFilters ? 'block' : 'hidden lg:block'}`}>
                         <FilterSidebar filters={filters} onFilterChange={handleFilterChange} />
                     </div>
 
@@ -190,7 +203,7 @@ const SearchResultsPage = () => {
                                 </div>
                             </>
                         ) : (
-                            <div className="h-[600px] rounded-xl overflow-hidden shadow-lg border bg-muted">
+                            <div className="h-[60vh] lg:h-[600px] rounded-xl overflow-hidden shadow-lg border bg-muted">
                                 <MapContainer
                                     center={filters.lat && filters.lng ? [filters.lat, filters.lng] : [9.9312, 76.2673]}
                                     zoom={11}

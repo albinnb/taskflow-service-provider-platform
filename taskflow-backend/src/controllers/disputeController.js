@@ -2,6 +2,7 @@ import asyncHandler from '../utils/asyncHandler.js';
 import Dispute from '../models/Dispute.js';
 import Booking from '../models/Booking.js';
 import User from '../models/User.js';
+import { sendDisputeResolution } from '../services/emailService.js';
 
 /**
  * @route POST /api/disputes
@@ -80,7 +81,35 @@ const resolveDispute = asyncHandler(async (req, res) => {
 
     if (status) dispute.resolutionDate = Date.now();
 
+
+
     await dispute.save();
+
+    // Send Emails
+    try {
+        const fullDispute = await Dispute.findById(dispute._id).populate('bookingId');
+        // Need to fetch customer and provider User objects
+        // The dispute has raisedBy (likely customer) and providerId (Provider Model)
+        // Wait, providerId in Dispute is ref to 'Provider' model? Let's check model or Create logic.
+        // In createDispute: providerId: booking.providerId. Booking.providerId is ref to Provider.
+        // So we need:
+        // Customer: User.findById(fullDispute.raisedBy) ? Or checking who raised it.
+        // Actually, usually booking has userId (customer) and providerId (provider).
+        // Let's rely on Booking to identify Customer and Provider.
+
+        const booking = await Booking.findById(fullDispute.bookingId).populate('providerId');
+        if (booking) {
+            const customer = await User.findById(booking.userId);
+            const provider = await Booking.model('Provider').findById(booking.providerId).populate('userId');
+            const providerUser = provider ? provider.userId : null;
+
+            if (customer && providerUser) {
+                await sendDisputeResolution(fullDispute, customer, providerUser);
+            }
+        }
+    } catch (error) {
+        console.error("Failed to send dispute emails:", error);
+    }
 
     // Logic for Refunds could handle Razorpay refund API here if we had it
     // if (status === 'refunded') { ... }

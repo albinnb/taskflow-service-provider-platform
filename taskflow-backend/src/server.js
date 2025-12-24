@@ -12,6 +12,9 @@ import connectDB from './config/db.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 import { apiLimiter } from './config/rateLimit.js';
 import cookieParser from 'cookie-parser';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import socketHandler from './socket/socketHandler.js';
 
 // Import Routes
 import authRoutes from './routes/authRoutes.js';
@@ -25,11 +28,22 @@ import paymentRoutes from './routes/paymentRoutes.js'; // Payment
 import availabilityRoutes from './routes/availabilityRoutes.js';
 import disputeRoutes from './routes/disputeRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
 
 // Connect to MongoDB (Must run AFTER dotenv.config())
 connectDB();
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
+    credentials: true // Allow cookies
+  }
+});
+
+// Initialize Socket.io
+socketHandler(io);
 const PORT = process.env.PORT || 5000;
 
 // === MIDDLEWARE ===
@@ -65,9 +79,10 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/availability', availabilityRoutes);
 app.use('/api/disputes', disputeRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/chats', chatRoutes);
 
 // === ERROR HANDLING MIDDLEWARE ===
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(PORT, () => console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`));
+httpServer.listen(PORT, () => console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`));

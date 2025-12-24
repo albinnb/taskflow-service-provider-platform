@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext'; // Import AuthContext to use the hook
 import { ThemeProvider } from './context/ThemeContext';
+import { SocketProvider } from './context/SocketContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Header from './components/common/Header';
 import Footer from './components/common/Footer';
@@ -23,6 +24,7 @@ import DashboardAdmin from './pages/admin/DashboardAdmin';
 import AboutPage from './pages/common/AboutPage';
 import HelpPage from './pages/common/HelpPage';
 import HowItWorksPage from './pages/common/HowItWorksPage';
+import ChatPage from './pages/common/ChatPage';
 
 // --- NEW IMPORTS ---
 import ProfileCompletionPage from './pages/user/ProfileCompletionPage';
@@ -57,44 +59,47 @@ const ProfileCheckWrapper = ({ children }) => {
 function App() {
   return (
     <AuthProvider>
-      <ThemeProvider>
-        <BrowserRouter>
-          <div className="flex flex-col min-h-screen bg-background text-foreground font-sans antialiased">
-            <Header />
-            <main className="flex-grow">
-              <Routes>
-                {/* Public Routes (Always Accessible) */}
-                <Route path="/" element={<HomePage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/services" element={<ServicesPage />} />
-                <Route path="/search" element={<SearchResultsPage />} />
-                <Route path="/service/:id" element={<ServiceDetailPage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/help" element={<HelpPage />} />
-                <Route path="/how-it-works" element={<HowItWorksPage />} />
+      <SocketProvider>
+        <ThemeProvider>
+          <BrowserRouter>
+            <div className="flex flex-col min-h-screen bg-background text-foreground font-sans antialiased">
+              <Header />
+              <main className="flex-grow">
+                <Routes>
+                  {/* Public Routes (Always Accessible) */}
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/services" element={<ServicesPage />} />
+                  <Route path="/search" element={<SearchResultsPage />} />
+                  <Route path="/service/:id" element={<ServiceDetailPage />} />
+                  <Route path="/about" element={<AboutPage />} />
+                  <Route path="/help" element={<HelpPage />} />
+                  <Route path="/how-it-works" element={<HowItWorksPage />} />
 
-                {/* Profile Completion Routes */}
-                <Route path="/profile/complete" element={<ProfileCompletionPage />} />
-                <Route path="/provider/profile/setup" element={<ProviderProfileForm />} />
+                  {/* Profile Completion Routes */}
+                  <Route path="/profile/complete" element={<ProfileCompletionPage />} />
+                  <Route path="/provider/profile/setup" element={<ProviderProfileForm />} />
 
-                {/* Protected Routes */}
-                <Route element={<ProfileCheckWrapper><ProtectedRoute /></ProfileCheckWrapper>}>
-                  <Route path="/customer/dashboard" element={<DashboardCustomer />} />
-                  <Route path="/review/submit/:bookingId" element={<ReviewSubmitPage />} />
-                  <Route path="/provider/dashboard" element={<DashboardProvider />} />
-                  <Route path="/provider/settings" element={<ProviderSettings />} />
-                  <Route path="/admin/dashboard" element={<DashboardAdmin />} />
-                </Route>
+                  {/* Protected Routes */}
+                  <Route element={<ProfileCheckWrapper><ProtectedRoute /></ProfileCheckWrapper>}>
+                    <Route path="/customer/dashboard" element={<DashboardCustomer />} />
+                    <Route path="/review/submit/:bookingId" element={<ReviewSubmitPage />} />
+                    <Route path="/provider/dashboard" element={<DashboardProvider />} />
+                    <Route path="/provider/settings" element={<ProviderSettings />} />
+                    <Route path="/admin/dashboard" element={<DashboardAdmin />} />
+                    <Route path="/messages" element={<ChatPage />} />
+                  </Route>
 
-                {/* Fallback 404 Route */}
-                <Route path="*" element={<h1 className="text-center p-10 text-xl">404 Not Found</h1>} />
-              </Routes>
-            </main>
-            <Footer />
-          </div>
-        </BrowserRouter>
-      </ThemeProvider>
+                  {/* Fallback 404 Route */}
+                  <Route path="*" element={<h1 className="text-center p-10 text-xl">404 Not Found</h1>} />
+                </Routes>
+              </main>
+              <Footer />
+            </div>
+          </BrowserRouter>
+        </ThemeProvider>
+      </SocketProvider>
     </AuthProvider>
   );
 }

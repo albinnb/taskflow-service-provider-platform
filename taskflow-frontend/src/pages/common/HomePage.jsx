@@ -32,7 +32,7 @@ const HomePage = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
 
             <div className="space-y-8">
-              <h1 className="text-5xl md:text-6xl/tight font-extrabold text-foreground tracking-tight">
+              <h1 className="text-4xl md:text-6xl/tight font-extrabold text-foreground tracking-tight">
                 Help when you <br />
                 <span className="text-primary italic">need it.</span>
               </h1>
@@ -91,7 +91,7 @@ const HomePage = () => {
             <p className="text-muted-foreground">Most requested services in your area.</p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {popularCategories.map((cat) => (
               <Card
                 key={cat.name}

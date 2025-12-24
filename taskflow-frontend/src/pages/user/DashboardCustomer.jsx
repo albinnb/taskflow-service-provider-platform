@@ -149,7 +149,7 @@ const DashboardCustomer = () => {
       </aside>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 overflow-y-auto bg-muted/10 p-6 md:p-8">
+      <main className="flex-1 overflow-y-auto bg-muted/10 p-3 md:p-8 pb-20 md:pb-8">
         {activeTab === 'bookings' && (
           <div className="max-w-5xl mx-auto space-y-6">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -271,6 +271,24 @@ const DashboardCustomer = () => {
         user={user}
         onUpdate={handleProfileUpdate}
       />
+
+      {/* MOBILE BOTTOM NAVIGATION */}
+      <div className="md:hidden fixed bottom-0 z-40 w-full bg-card border-t border-border flex justify-around items-center p-2 safe-area-pb">
+        <button
+          onClick={() => setActiveTab('bookings')}
+          className={cn("flex flex-col items-center justify-center w-full py-1", activeTab === 'bookings' ? "text-primary" : "text-muted-foreground")}
+        >
+          <FaHistory className="h-5 w-5 mb-1" />
+          <span className="text-[10px] font-medium">Bookings</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('profile')}
+          className={cn("flex flex-col items-center justify-center w-full py-1", activeTab === 'profile' ? "text-primary" : "text-muted-foreground")}
+        >
+          <FaUser className="h-5 w-5 mb-1" />
+          <span className="text-[10px] font-medium">Profile</span>
+        </button>
+      </div>
     </div>
   );
 };

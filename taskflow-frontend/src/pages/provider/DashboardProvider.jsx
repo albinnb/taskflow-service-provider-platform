@@ -130,7 +130,7 @@ const DashboardProvider = () => {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 overflow-y-auto bg-muted/10 p-6 md:p-8">
+      <main className="flex-1 overflow-y-auto bg-muted/10 p-3 md:p-8 pb-20 md:pb-8">
 
         {/* Verification Banner */}
         {!roleProfile.isVerified && (
@@ -145,21 +145,23 @@ const DashboardProvider = () => {
 
         {view === TABS.BOOKINGS && (
           <div className="max-w-5xl mx-auto space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h1 className="text-2xl font-bold tracking-tight">Booking Management</h1>
-              <div className="flex bg-card border border-border rounded-lg p-1">
-                {['pending', 'confirmed', 'completed', 'cancelled'].map(status => (
-                  <button
-                    key={status}
-                    onClick={() => setSelectedStatus(status)}
-                    className={cn(
-                      "px-4 py-1.5 text-sm font-medium rounded-md transition-all capitalize",
-                      selectedStatus === status ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {status}
-                  </button>
-                ))}
+              <div className="w-full overflow-x-auto pb-2">
+                <div className="flex bg-card border border-border rounded-lg p-1 min-w-max">
+                  {['pending', 'confirmed', 'completed', 'cancelled'].map(status => (
+                    <button
+                      key={status}
+                      onClick={() => setSelectedStatus(status)}
+                      className={cn(
+                        "px-4 py-1.5 text-sm font-medium rounded-md transition-all capitalize whitespace-nowrap",
+                        selectedStatus === status ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -170,7 +172,7 @@ const DashboardProvider = () => {
             ) : (
               <div className="grid gap-4">
                 {bookings.map(booking => (
-                  <div key={booking._id} className="p-6 bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-all">
+                  <div key={booking._id} className="p-4 md:p-6 bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-all">
                     <div className="flex flex-col md:flex-row justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
@@ -282,6 +284,38 @@ const DashboardProvider = () => {
         )}
 
       </main>
+
+      {/* MOBILE BOTTOM NAVIGATION */}
+      <div className="md:hidden fixed bottom-0 z-40 w-full bg-card border-t border-border flex justify-around items-center p-2 safe-area-pb">
+        <button
+          onClick={() => setView(TABS.BOOKINGS)}
+          className={cn("flex flex-col items-center justify-center w-full py-1", view === TABS.BOOKINGS ? "text-primary" : "text-muted-foreground")}
+        >
+          <FaCalendarCheck className="h-5 w-5 mb-1" />
+          <span className="text-[10px] font-medium">Bookings</span>
+        </button>
+        <button
+          onClick={() => setView(TABS.SERVICES)}
+          className={cn("flex flex-col items-center justify-center w-full py-1", view === TABS.SERVICES ? "text-primary" : "text-muted-foreground")}
+        >
+          <FaListAlt className="h-5 w-5 mb-1" />
+          <span className="text-[10px] font-medium">Services</span>
+        </button>
+        <button
+          onClick={() => setView(TABS.ANALYTICS)}
+          className={cn("flex flex-col items-center justify-center w-full py-1", view === TABS.ANALYTICS ? "text-primary" : "text-muted-foreground")}
+        >
+          <FaChartLine className="h-5 w-5 mb-1" />
+          <span className="text-[10px] font-medium">Stats</span>
+        </button>
+        <button
+          onClick={() => setView(TABS.SETTINGS)}
+          className={cn("flex flex-col items-center justify-center w-full py-1", view === TABS.SETTINGS ? "text-primary" : "text-muted-foreground")}
+        >
+          <FaCog className="h-5 w-5 mb-1" />
+          <span className="text-[10px] font-medium">Settings</span>
+        </button>
+      </div>
     </div>
   );
 };

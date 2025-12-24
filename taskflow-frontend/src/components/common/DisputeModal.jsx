@@ -14,7 +14,7 @@ const DisputeModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md overflow-hidden relative animation-fade-in">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md max-h-[90vh] flex flex-col relative animation-fade-in">
 
                 {/* Header */}
                 <div className="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
@@ -25,7 +25,7 @@ const DisputeModal = ({ isOpen, onClose, onSubmit, isSubmitting }) => {
                 </div>
 
                 {/* Body */}
-                <form onSubmit={handleSubmit(handleFormSubmit)} className="p-6">
+                <form onSubmit={handleSubmit(handleFormSubmit)} className="p-6 overflow-y-auto">
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                             Please describe the issue with this booking:

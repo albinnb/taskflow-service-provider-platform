@@ -250,9 +250,9 @@ const DashboardAdmin = () => {
                 </div>
             </aside>
 
-            <main className="flex-1 overflow-y-auto bg-muted/10 p-6 md:p-8">
+            <main className="flex-1 overflow-y-auto bg-muted/10 p-3 md:p-8 pb-20 md:pb-8">
                 <div className="max-w-6xl mx-auto">
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground mb-6 capitalize flex items-center gap-3">
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground mb-4 md:mb-6 capitalize flex items-center gap-3">
                         {view === TABS.USERS && <FaUser className="text-primary" />}
                         {view === TABS.PROVIDERS && <FaBuilding className="text-primary" />}
                         {view === TABS.SERVICE_APPROVALS && <FaClipboardList className="text-primary" />}
@@ -269,6 +269,38 @@ const DashboardAdmin = () => {
                 dispute={selectedDispute}
                 onUpdateStatus={handleResolveDispute}
             />
+
+            {/* MOBILE BOTTOM NAVIGATION */}
+            <div className="md:hidden fixed bottom-0 z-40 w-full bg-card border-t border-border flex justify-around items-center p-2 safe-area-pb">
+                <button
+                    onClick={() => setView(TABS.USERS)}
+                    className={cn("flex flex-col items-center justify-center w-full py-1", view === TABS.USERS ? "text-primary" : "text-muted-foreground")}
+                >
+                    <FaUser className="h-5 w-5 mb-1" />
+                    <span className="text-[10px] font-medium">Users</span>
+                </button>
+                <button
+                    onClick={() => setView(TABS.PROVIDERS)}
+                    className={cn("flex flex-col items-center justify-center w-full py-1", view === TABS.PROVIDERS ? "text-primary" : "text-muted-foreground")}
+                >
+                    <FaBuilding className="h-5 w-5 mb-1" />
+                    <span className="text-[10px] font-medium">Taskers</span>
+                </button>
+                <button
+                    onClick={() => setView(TABS.SERVICE_APPROVALS)}
+                    className={cn("flex flex-col items-center justify-center w-full py-1", view === TABS.SERVICE_APPROVALS ? "text-primary" : "text-muted-foreground")}
+                >
+                    <FaClipboardList className="h-5 w-5 mb-1" />
+                    <span className="text-[10px] font-medium">Approvals</span>
+                </button>
+                <button
+                    onClick={() => setView(TABS.DISPUTES)}
+                    className={cn("flex flex-col items-center justify-center w-full py-1", view === TABS.DISPUTES ? "text-primary" : "text-muted-foreground")}
+                >
+                    <FaGavel className="h-5 w-5 mb-1" />
+                    <span className="text-[10px] font-medium">Disputes</span>
+                </button>
+            </div>
         </div>
     );
 };

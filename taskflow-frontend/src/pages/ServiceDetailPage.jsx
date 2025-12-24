@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { coreApi } from '../api/serviceApi';
+import React, { useState, useEffect, useContext } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { coreApi, chatApi } from '../api/serviceApi';
+import { AuthContext } from '../context/AuthContext';
 import BookingModal from '../components/booking/BookingModal';
 import { FaStar, FaMapMarkerAlt, FaClock, FaRegCalendarCheck, FaUser } from 'react-icons/fa';
 import { toast } from 'react-toastify';
@@ -15,7 +16,37 @@ const ServiceDetailPage = () => {
     const [service, setService] = useState(null);
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { user } = useContext(AuthContext);
+    const navigate = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const handleMessageProvider = async () => {
+        if (!user) {
+            toast.info('Please login to message the provider.');
+            navigate('/login');
+            return;
+        }
+        try {
+            // Create or get existing chat
+            const res = await chatApi.createChat(service.providerId.userId._id || service.providerId.userId); // Ensure we get the USER ID not Provider ID object
+            // Wait, service.providerId is populated Provider object.
+            // Provider model has userId field (ref User).
+            // We need to pass the target User ID to createChat.
+            // Let's check if service.providerId is populated.
+            // In ServiceDetailPage, service.providerId seems to be populated based on usage: provider.businessName
+            // But does it populate userId inside provider?
+            // getServiceDetails populate logic needs to be checked or inferred.
+            // Usually coreApi.getServiceDetails returns service populated with providerId.
+            // Let's assume providerId.userId is just an ID string if not populated, or we need to check backend controller.
+            // Safety check:
+            const targetUserId = service.providerId.userId._id || service.providerId.userId;
+
+            navigate('/messages', { state: { selectedChatId: res.data._id } });
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to start chat.');
+        }
+    };
 
     useEffect(() => {
         const fetchServiceAndReviews = async () => {
@@ -144,6 +175,19 @@ const ServiceDetailPage = () => {
                                 Book Now
                             </Button>
 
+
+
+                            {user && (
+                                <Button
+                                    variant="outline"
+                                    size="lg"
+                                    className="w-full text-lg h-14 font-medium mt-3"
+                                    onClick={handleMessageProvider}
+                                >
+                                    Message Provider
+                                </Button>
+                            )}
+
                             <p className="text-xs text-center text-muted-foreground mt-4">
                                 You won't be charged until the task is completed.
                             </p>
@@ -153,14 +197,16 @@ const ServiceDetailPage = () => {
                 </div>
             </div>
 
-            {isModalOpen && (
-                <BookingModal
-                    service={service}
-                    provider={provider}
-                    onClose={() => setIsModalOpen(false)}
-                />
-            )}
-        </div>
+            {
+                isModalOpen && (
+                    <BookingModal
+                        service={service}
+                        provider={provider}
+                        onClose={() => setIsModalOpen(false)}
+                    />
+                )
+            }
+        </div >
     );
 };
 

@@ -92,7 +92,7 @@ const getServices = asyncHandler(async (req, res) => {
         // Use ApiFeatures for text search and category filtering and field limiting
         // WARN: We cannot use ApiFeatures for pagination/sorting because we need to sort by distance first
         const filterBuilder = new ApiFeatures(
-            Service.find().populate('providerId', 'businessName ratingAvg location address'),
+            Service.find().populate('providerId', 'businessName ratingAvg location address userId'),
             queryObj
         )
             .search()
@@ -146,7 +146,7 @@ const getServices = asyncHandler(async (req, res) => {
 
         // 3. Execute the main query
         const features = new ApiFeatures(
-            Service.find(finalFilter).populate('providerId', 'businessName ratingAvg address location'),
+            Service.find(finalFilter).populate('providerId', 'businessName ratingAvg address location userId'),
             req.query
         )
             .sort()
@@ -168,7 +168,7 @@ const getServices = asyncHandler(async (req, res) => {
 
 const getServiceById = asyncHandler(async (req, res) => {
     const service = await Service.findById(req.params.id)
-        .populate('providerId', 'businessName ratingAvg address isVerified')
+        .populate('providerId', 'businessName ratingAvg address isVerified userId')
         // GEO-SEARCH REMOVAL: Removed 'location' from providerId populate fields
         .populate('category', 'name slug')
         .lean();
