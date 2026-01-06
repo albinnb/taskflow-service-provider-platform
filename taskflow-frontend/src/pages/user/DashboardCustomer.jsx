@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useAuth from '../../hooks/useAuth';
-import { coreApi } from '../../api/serviceApi';
+import { coreApi, authApi } from '../../api/serviceApi';
 import { toast } from 'react-toastify';
 import { FaCalendarAlt, FaHistory, FaStar, FaTimesCircle, FaCreditCard, FaExclamationTriangle, FaUser, FaCog, FaSignOutAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
@@ -10,7 +10,7 @@ import { cn } from '../../lib/utils';
 import { Button } from '../../components/ui/Button';
 
 const DashboardCustomer = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, loadUser, setUser } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('');
@@ -24,6 +24,7 @@ const DashboardCustomer = () => {
 
   useEffect(() => {
     fetchBookings(filterStatus);
+    loadUser(true); // Ensure user data is fresh (especially address) - Silent update
   }, [filterStatus]);
 
   const fetchBookings = async (status) => {
@@ -70,14 +71,10 @@ const DashboardCustomer = () => {
     }
   };
 
-  const handleProfileUpdate = async (data) => {
-    try {
-      await coreApi.updateUserProfile(data);
-      toast.success('Profile updated.');
-      setIsProfileModalOpen(false);
-    } catch (error) {
-      toast.error('Failed to update profile.');
-    }
+  const handleProfileUpdate = (updatedUser) => {
+    setUser(updatedUser);
+    toast.success('Profile updated.');
+    setIsProfileModalOpen(false);
   };
 
   const handlePayment = async (booking) => {
@@ -195,8 +192,8 @@ const DashboardCustomer = () => {
                           </span>
                           <span className="text-xs text-muted-foreground">{new Date(booking.scheduledAt).toLocaleDateString()}</span>
                         </div>
-                        <h3 className="font-bold text-lg text-foreground">{booking.serviceId.title}</h3>
-                        <p className="text-sm text-muted-foreground">Provider: {booking.providerId.businessName}</p>
+                        <h3 className="font-bold text-lg text-foreground">{booking.serviceId?.title || <span className='italic text-muted-foreground'>Service Unavailable</span>}</h3>
+                        <p className="text-sm text-muted-foreground">Provider: {booking.providerId?.businessName || <span className='italic'>Unknown Provider</span>}</p>
                       </div>
 
                       <div className="flex flex-col items-end gap-2">
@@ -254,6 +251,37 @@ const DashboardCustomer = () => {
                 </div>
               </div>
             </div>
+
+            <div className="mt-8 bg-destructive/10 border border-destructive/20 rounded-xl p-6">
+              <h3 className="text-lg font-bold text-destructive mb-2 flex items-center">
+                <FaExclamationTriangle className="mr-2" /> Danger Zone
+              </h3>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <p className="font-semibold text-destructive">Delete Account</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Permanently remove your account and all data.
+                  </p>
+                </div>
+                <Button
+                  variant="destructive"
+                  onClick={async () => {
+                    if (window.confirm('Are you absolutely sure you want to delete your account? This action cannot be undone.')) {
+                      try {
+                        await authApi.deleteAccount();
+                        toast.success('Account deleted successfully.');
+                        logout();
+                      } catch (error) {
+                        toast.error(error.response?.data?.message || 'Failed to delete account.');
+                      }
+                    }
+                  }}
+                >
+                  Delete Account
+                </Button>
+              </div>
+            </div>
+
           </div>
         )}
       </main>

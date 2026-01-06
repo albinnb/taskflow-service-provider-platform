@@ -7,6 +7,7 @@ export const authApi = {
   logout: () => axiosClient.post('/auth/logout'),
   getMe: () => axiosClient.get('/auth/me'),
   getProviderProfile: () => axiosClient.get('/auth/provider'), // Added this back for context to load provider data
+  deleteAccount: () => axiosClient.delete('/auth/profile'),
 };
 
 // --- CORE DATA & CRUD API ---

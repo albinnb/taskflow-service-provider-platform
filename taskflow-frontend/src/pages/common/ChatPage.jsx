@@ -55,8 +55,8 @@ const ChatPage = () => {
                             <p className="p-4 text-gray-500 text-center">No conversations yet.</p>
                         ) : (
                             chats.map((chat) => {
-                                // Find the participant that is NOT me
-                                const otherUser = chat.participants.find((p) => p._id !== user._id) || { name: 'Unknown User' };
+                                // Find the participant that is NOT me, handling deleted users (null)
+                                const otherUser = chat.participants.find((p) => p && p._id !== user._id) || { name: 'Deleted User' };
                                 const isSelected = selectedChatId === chat._id;
 
                                 return (

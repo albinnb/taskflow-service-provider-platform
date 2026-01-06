@@ -85,4 +85,4 @@ app.use('/api/chats', chatRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-httpServer.listen(PORT, () => console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`));
+httpServer.listen(PORT, () => console.log(`TaskFlow Server running in ${process.env.NODE_ENV} mode on port ${PORT}`));

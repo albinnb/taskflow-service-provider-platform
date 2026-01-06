@@ -5,7 +5,7 @@ import { toast, ToastContainer } from 'react-toastify';
 export const AuthContext = createContext();
 
 // --- Helper Function to Save/Clear Token ---
-const TOKEN_KEY = 'locallink-token';
+const TOKEN_KEY = 'taskflow-token';
 
 // CRITICAL FIX: The setAuthToken helper MUST be outside the component
 const setAuthToken = (token) => {
@@ -28,8 +28,8 @@ export const AuthProvider = ({ children }) => {
   const [isProfileComplete, setIsProfileComplete] = useState(true);
 
   // --- Load User Function (Check Auth Status) ---
-  const loadUser = async () => {
-    setLoading(true);
+  const loadUser = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       // Check if token exists before trying to fetch
       if (!localStorage.getItem(TOKEN_KEY)) {
@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
       setRoleProfile(null);
       setIsProfileComplete(true);
     }
-    setLoading(false);
+    if (!silent) setLoading(false);
   };
 
   useEffect(() => {
@@ -143,7 +143,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       setLoading(false);
-      toast.success('Registration successful! Welcome to LocalLink.');
+      toast.success('Registration successful! Welcome to TaskFlow.');
       return true;
     } catch (error) {
       setLoading(false);

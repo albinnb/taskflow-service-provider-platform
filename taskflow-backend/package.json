@@ -1,7 +1,7 @@
 {
   "name": "locallink-backend",
   "version": "1.0.0",
-  "description": "LocalLink MERN Backend (Service Provider Directory & Booking)",
+  "description": "TaskFlow MERN Backend (Service Provider Directory & Booking)",
   "main": "src/server.js",
   "type": "module",
   "scripts": {

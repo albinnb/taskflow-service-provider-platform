@@ -2,7 +2,12 @@ import { validationResult } from 'express-validator';
 import User from '../models/User.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { generateToken } from '../utils/jwt.js';
-import { sendBanNotification } from '../services/emailService.js';
+import { sendBanNotification, sendDeletionNotification, sendUnbanNotification } from '../services/emailService.js';
+import Provider from '../models/Provider.js';
+import Service from '../models/Service.js';
+import Review from '../models/Review.js';
+import Message from '../models/Message.js';
+import DeletedUserLog from '../models/DeletedUserLog.js';
 
 // ------------------------------------------------------------------
 // NEW CONTROLLER: Update User Address (for self-update)
@@ -161,9 +166,13 @@ const updateUser = asyncHandler(async (req, res) => {
         user.address = req.body.address || user.address;
 
         if (req.body.hasOwnProperty('isBanned')) {
-            // Check if status is changing to Banned
+            // Check if status is changing
             if (req.body.isBanned === true && user.isBanned === false) {
+                // Ban Notification
                 await sendBanNotification(user);
+            } else if (req.body.isBanned === false && user.isBanned === true) {
+                // Unban Notification
+                await sendUnbanNotification(user);
             }
             user.isBanned = req.body.isBanned;
         }
@@ -195,11 +204,41 @@ const deleteUser = asyncHandler(async (req, res) => {
     const user = await User.findById(req.params.id);
 
     if (user) {
-        // Note: In a production app, you'd also need to delete associated Provider,
-        // Services, Bookings, and Reviews before deleting the User.
+        // 1. Check if the user is a Provider (or has a provider profile linked)
+        const provider = await Provider.findOne({ userId: user._id });
+
+        if (provider) {
+            // 2. Delete all Services associated with this provider
+            await Service.deleteMany({ providerId: provider._id });
+
+            // 3. Delete the Provider profile
+            await Provider.deleteOne({ _id: provider._id });
+        }
+
+        // 4. Send deletion notification email
+        await sendDeletionNotification(user);
+
+        // 5. Professional Cleanup: Remove User Content but Keep Transaction History
+        // Delete Reviews written by this user (Personal opinion/content)
+        await Review.deleteMany({ userId: user._id });
+
+        // Delete Messages sent by this user (Private communication)
+        await Message.deleteMany({ sender: user._id });
+
+        // Note: We intentionally KEEP Bookings. 
+        // Bookings are financial/business records and should not be deleted even if the user is gone.
+        // The frontend will handle the missing user link by showing "Deleted User".
+
+        // 6. Log the deletion for future login attempts (So they know they were banned/deleted)
+        await DeletedUserLog.create({
+            email: user.email,
+            reason: 'Admin deleted account',
+        });
+
+        // 7. Delete the User document (PII Removal)
         await User.deleteOne({ _id: req.params.id });
 
-        res.status(200).json({ success: true, message: 'User removed' });
+        res.status(200).json({ success: true, message: 'User account and personal content removed. Transaction history retained.' });
     } else {
         res.status(404);
         throw new Error('User not found');

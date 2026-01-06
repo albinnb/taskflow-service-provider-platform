@@ -71,7 +71,7 @@ const sendBookingConfirmation = async (customer, providerUser, booking, service)
         <li><strong>Status:</strong> ${booking.status.toUpperCase()}</li>
     </ul>
     <p>The provider will contact you shortly to confirm the details.</p>
-    <p>Thank you for choosing LocalLink!</p>
+    <p>Thank you for choosing TaskFlow!</p>
   `;
 
   await sendEmail({
@@ -81,7 +81,7 @@ const sendBookingConfirmation = async (customer, providerUser, booking, service)
   });
 
   // --- 2. Email to Provider ---
-  const providerSubject = `LocalLink: NEW Booking Request for ${service.title}`;
+  const providerSubject = `TaskFlow: NEW Booking Request for ${service.title}`;
   const providerMessage = `
     <h1>New Booking Alert!</h1>
     <p>Dear ${providerUser.name},</p>
@@ -106,13 +106,13 @@ const sendBookingConfirmation = async (customer, providerUser, booking, service)
  * @desc Sends a ban notification to the user
  */
 const sendBanNotification = async (user) => {
-  const subject = 'LocalLink: Account Suspension Notice';
+  const subject = 'TaskFlow: Account Suspension Notice';
   const message = `
     <h1>Account Suspended</h1>
     <p>Dear ${user.name},</p>
-    <p>We are writing to inform you that your LocalLink account has been suspended due to violations of our Terms of Service.</p>
+    <p>We are writing to inform you that your TaskFlow account has been suspended due to violations of our Terms of Service.</p>
     <p>If you believe this is an error, please contact our support team.</p>
-    <p>Regards,<br>LocalLink Team</p>
+    <p>Regards,<br>TaskFlow Team</p>
   `;
 
   await sendEmail({
@@ -127,7 +127,7 @@ const sendBanNotification = async (user) => {
  * @desc Sends dispute resolution emails to both parties
  */
 const sendDisputeResolution = async (dispute, customer, providerUser) => {
-  const subject = `LocalLink: Dispute Resolved (Booking #${dispute.bookingId._id ? dispute.bookingId._id.toString().slice(-6) : 'N/A'})`;
+  const subject = `TaskFlow: Dispute Resolved (Booking #${dispute.bookingId._id ? dispute.bookingId._id.toString().slice(-6) : 'N/A'})`;
 
   // 1. Email to Customer
   const customerMessage = `
@@ -138,7 +138,7 @@ const sendDisputeResolution = async (dispute, customer, providerUser) => {
         <li><strong>Resolution Status:</strong> ${dispute.status.toUpperCase()}</li>
     </ul>
     <p>Thank you for your patience.</p>
-    <p>Regards,<br>LocalLink Team</p>
+    <p>Regards,<br>TaskFlow Team</p>
   `;
 
   await sendEmail({
@@ -156,7 +156,7 @@ const sendDisputeResolution = async (dispute, customer, providerUser) => {
     <ul>
         <li><strong>Resolution Status:</strong> ${dispute.status.toUpperCase()}</li>
     </ul>
-    <p>Regards,<br>LocalLink Team</p>
+    <p>Regards,<br>TaskFlow Team</p>
   `;
 
   await sendEmail({
@@ -167,4 +167,49 @@ const sendDisputeResolution = async (dispute, customer, providerUser) => {
   });
 };
 
-export { sendEmail, sendBookingConfirmation, sendBanNotification, sendDisputeResolution };
+
+/**
+ * @desc Sends an account deletion notification
+ */
+const sendDeletionNotification = async (user) => {
+  const subject = 'TaskFlow: Account Deleted';
+  const message = `
+    <h1>Account Deleted</h1>
+    <p>Dear ${user.name},</p>
+    <p>Your TaskFlow account has been successfully deleted as per your request or administrative action.</p>
+    <p>All your personal data, services, and profile information have been removed from our system.</p>
+    <p>We are sorry to see you go. You are always welcome to join us again in the future.</p>
+    <p>Regards,<br>TaskFlow Team</p>
+  `;
+
+  await sendEmail({
+    email: user.email,
+    subject: subject,
+    message: message,
+    from: 'aalbinbabupaduppu@gmail.com'
+  });
+};
+
+/**
+ * @desc Sends an account unban notification
+ */
+const sendUnbanNotification = async (user) => {
+  const subject = 'TaskFlow: Account Restored';
+  const message = `
+    <h1>Welcome Back!</h1>
+    <p>Dear ${user.name},</p>
+    <p>We are pleased to inform you that your TaskFlow account has been reactivated.</p>
+    <p>You can now log in and access all platform features again.</p>
+    <p>If you have any questions, please contact our support team.</p>
+    <p>Regards,<br>TaskFlow Team</p>
+  `;
+
+  await sendEmail({
+    email: user.email,
+    subject: subject,
+    message: message,
+    from: 'aalbinbabupaduppu@gmail.com'
+  });
+};
+
+export { sendEmail, sendBookingConfirmation, sendBanNotification, sendUnbanNotification, sendDisputeResolution, sendDeletionNotification };

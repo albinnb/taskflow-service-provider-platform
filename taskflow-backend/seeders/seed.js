@@ -377,7 +377,7 @@ const importData = async () => {
           durationMinutes: req.duration,
           isActive: true,
           approvalStatus: 'approved',
-          images: req.images // Add images here
+          images: req.images
         });
       }
       dbServices.push(sc);
@@ -424,10 +424,7 @@ const importData = async () => {
       reviewDocs.push({
         userId: c1._id,
         providerId: service.providerId,
-        serviceId: service._id, // If booking linkage not strictly enforced in model validation
-        // Note: If Review model requires bookingId, we might need dummy bookings. 
-        // Assuming simplified seeding where we just need reviews to show up.
-        // If BookingId IS required, we must create dummy bookings first.
+        serviceId: service._id,
         rating: Math.floor(Math.random() * 2) + 4, // 4 or 5
         comment: reviewComments[Math.floor(Math.random() * reviewComments.length)],
       });
@@ -442,8 +439,7 @@ const importData = async () => {
       });
     }
 
-    // We need to verify if Review requires bookingId. Usually yes.
-    // Let's create dummy COMPLETED bookings for these reviews to keep it clean.
+    // Create dummy COMPLETED bookings for these reviews
     const dbBookings = [];
     for (const r of reviewDocs) {
       // Create a completed booking for this review
@@ -481,7 +477,7 @@ const importData = async () => {
       }
     }
 
-    console.log('✅ Seeding Complete!');
+    console.log('✅ TaskFlow Seeding Complete!');
     process.exit(0);
 
   } catch (error) {

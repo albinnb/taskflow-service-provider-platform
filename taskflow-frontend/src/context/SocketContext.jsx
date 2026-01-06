@@ -30,7 +30,7 @@ export const SocketProvider = ({ children }) => {
             // Connect to the backend (same host/port in dev usually, or configured URL)
             const socketInstance = io('http://localhost:5000', {
                 auth: {
-                    token: localStorage.getItem('locallink-token'), // Matches TOKEN_KEY in AuthContext
+                    token: localStorage.getItem('taskflow-token'), // Matches TOKEN_KEY in AuthContext
                 },
                 transports: ['websocket'], // Force websocket
             });

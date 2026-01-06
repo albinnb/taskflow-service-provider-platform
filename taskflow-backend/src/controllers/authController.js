@@ -1,5 +1,9 @@
 ﻿import User from '../models/User.js';
 import Provider from '../models/Provider.js';
+import DeletedUserLog from '../models/DeletedUserLog.js';
+import Service from '../models/Service.js';
+import Review from '../models/Review.js';
+import Message from '../models/Message.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { generateToken } from '../utils/jwt.js';
 
@@ -74,6 +78,18 @@ const authUser = asyncHandler(async (req, res) => {
 
     if (!user) {
         console.log('User not found for email:', email);
+
+        // Check if the user was deleted/banned
+        const deletedLog = await DeletedUserLog.findOne({ email }).sort({ createdAt: -1 });
+        if (deletedLog) {
+            res.status(403);
+            if (deletedLog.reason === 'User deleted their own account') {
+                throw new Error('This account has been deleted by the user request.');
+            } else {
+                throw new Error('Your account has been permanent banned/deleted by the administrator.');
+            }
+        }
+
         res.status(401);
         throw new Error('Invalid email or password');
     }
@@ -176,4 +192,46 @@ const logoutUser = asyncHandler(async (req, res) => {
     res.json({ message: 'Logout successful' });
 });
 
-export { registerUser, authUser, getMe, getProviderProfile, logoutUser };
+const deleteMyAccount = asyncHandler(async (req, res) => {
+    // 1. Get the user from the request (set by protect middleware)
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+        // 2. Check if the user is a Provider (or has a provider profile linked)
+        const provider = await Provider.findOne({ userId: user._id });
+
+        if (provider) {
+            // 3. Delete all Services associated with this provider
+            await Service.deleteMany({ providerId: provider._id });
+
+            // 4. Delete the Provider profile
+            await Provider.deleteOne({ _id: provider._id });
+        }
+
+        // 5. Professional Cleanup: Remove User Content but Keep Transaction History
+        // Delete Reviews written by this user
+        await Review.deleteMany({ userId: user._id });
+
+        // Delete Messages sent by this user
+        await Message.deleteMany({ sender: user._id });
+
+        // Note: We intentionally KEEP Bookings. (Business records)
+
+        // 6. Log the deletion for future login attempts
+        await DeletedUserLog.create({
+            email: user.email,
+            reason: 'User deleted their own account',
+        });
+
+        // 7. Delete the User document
+        await User.deleteOne({ _id: user._id });
+
+        // 8. Logout logic (conceptually) - Client will clear token
+        res.status(200).json({ success: true, message: 'Your account has been successfully deleted.' });
+    } else {
+        res.status(404);
+        throw new Error('User not found');
+    }
+});
+
+export { registerUser, authUser, getMe, getProviderProfile, logoutUser, deleteMyAccount };

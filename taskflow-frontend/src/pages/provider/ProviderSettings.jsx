@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { FaSave, FaMapMarkerAlt, FaCalendarAlt, FaUserEdit, FaTrashAlt, FaPlus } from 'react-icons/fa';
-import { coreApi } from '../../api/serviceApi';
+import { FaSave, FaMapMarkerAlt, FaCalendarAlt, FaUserEdit, FaTrashAlt, FaPlus, FaExclamationTriangle } from 'react-icons/fa';
+import { coreApi, authApi } from '../../api/serviceApi';
+import useAuth from '../../hooks/useAuth';
 import { toast } from 'react-toastify';
 import LocationPicker from '../../components/common/LocationPicker';
 import { cn } from '../../lib/utils';
@@ -20,7 +21,8 @@ const buildEmptyWeek = () =>
 
 const ProviderSettings = ({ roleProfile, user, onUpdate }) => {
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm();
-  const [categories, setCategories] = useState([]);
+  const { logout } = useAuth();
+
   const [availabilityDays, setAvailabilityDays] = useState(buildEmptyWeek());
   const [bufferTime, setBufferTime] = useState(0);
   const [loadingAvailability, setLoadingAvailability] = useState(true);
@@ -33,22 +35,14 @@ const ProviderSettings = ({ roleProfile, user, onUpdate }) => {
   const sectionTitleClass = "text-2xl font-bold text-foreground border-b border-border pb-2 mb-4 flex items-center";
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const res = await coreApi.getCategories();
-        setCategories(res.data.data);
-      } catch (error) {
-        toast.error('Could not load categories.');
-      }
-    };
-    fetchCategories();
+
 
     if (roleProfile) {
       reset({
         businessName: roleProfile.businessName,
         description: roleProfile.description,
         phone: user.phone || '',
-        categories: roleProfile.categories.map(cat => cat._id),
+        phone: user.phone || '',
       });
 
       if (roleProfile.location && roleProfile.location.coordinates) {
@@ -135,7 +129,7 @@ const ProviderSettings = ({ roleProfile, user, onUpdate }) => {
       businessName: data.businessName,
       description: data.description,
       phone: data.phone,
-      categories: data.categories,
+
       location: (currentLocation?.coordinates || (currentLocation?.lat && currentLocation?.lng)) ? {
         type: 'Point',
         coordinates: currentLocation.coordinates
@@ -193,23 +187,7 @@ const ProviderSettings = ({ roleProfile, user, onUpdate }) => {
           {errors.description && <p className={errorClass}>{errors.description.message}</p>}
         </div>
 
-        {/* Categories */}
-        <div>
-          <label className={labelClass}>Categories You Serve</label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-4 border border-border rounded-lg max-h-40 overflow-y-auto bg-card">
-            {categories.map(cat => (
-              <label key={cat._id} className="flex items-center space-x-2 text-foreground cursor-pointer hover:text-primary transition-colors">
-                <input
-                  type="checkbox"
-                  value={cat._id}
-                  {...register('categories')}
-                  className="h-4 w-4 text-primary rounded border-input focus:ring-primary"
-                />
-                <span>{cat.name}</span>
-              </label>
-            ))}
-          </div>
-        </div>
+
 
         {/* Location Picker */}
         <h3 className={`${sectionTitleClass} pt-4`}>
@@ -336,7 +314,38 @@ const ProviderSettings = ({ roleProfile, user, onUpdate }) => {
           </Button>
         </div>
       </form>
-    </div>
+
+
+      <div className="mt-10 pt-10 border-t border-destructive/20">
+        <h3 className="text-xl font-bold text-destructive mb-4 flex items-center">
+          <FaExclamationTriangle className="mr-2" /> Danger Zone
+        </h3>
+        <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <p className="font-semibold text-destructive">Delete Provider Account</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Once you delete your account, there is no going back. All your services, profile data, reviews, and messages will be permanently removed.
+            </p>
+          </div>
+          <Button
+            variant="destructive"
+            onClick={async () => {
+              if (window.confirm('Are you absolutely sure you want to delete your account? This action cannot be undone.')) {
+                try {
+                  await authApi.deleteAccount();
+                  toast.success('Account deleted successfully.');
+                  logout();
+                } catch (error) {
+                  toast.error(error.response?.data?.message || 'Failed to delete account.');
+                }
+              }
+            }}
+          >
+            Delete Account
+          </Button>
+        </div>
+      </div>
+    </div >
   );
 };
 

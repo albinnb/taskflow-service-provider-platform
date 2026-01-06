@@ -32,13 +32,21 @@ const DashboardProvider = () => {
   const [bookings, setBookings] = useState([]);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState(TABS.BOOKINGS);
+  // Default to SETTINGS if profile is not complete (e.g. location missing)
+  const [view, setView] = useState(() => {
+    if (roleProfile && (!roleProfile.address || !roleProfile.location)) return TABS.SETTINGS;
+    return TABS.BOOKINGS;
+  });
   const [selectedStatus, setSelectedStatus] = useState('pending');
   const [editingService, setEditingService] = useState(null);
   const [analyticsData, setAnalyticsData] = useState(null);
 
   useEffect(() => {
     if (roleProfile && isAuthenticated) {
+      // Force redirect to settings if profile is incomplete
+      if (!roleProfile.address || !roleProfile.location) {
+        setView(TABS.SETTINGS);
+      }
       fetchData();
     }
   }, [roleProfile, selectedStatus, view, isAuthenticated]);
@@ -176,12 +184,12 @@ const DashboardProvider = () => {
                     <div className="flex flex-col md:flex-row justify-between gap-4">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-bold text-lg text-foreground">{booking.serviceId.title}</span>
+                          <span className="font-bold text-lg text-foreground">{booking.serviceId?.title || <span className='italic text-muted-foreground'>Unknown Service</span>}</span>
                           <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-secondary text-secondary-foreground border border-border">
                             ₹{booking.totalPrice.toFixed(2)}
                           </span>
                         </div>
-                        <p className="text-sm text-foreground">Customer: {booking.userId.name}</p>
+                        <p className="text-sm text-foreground">Customer: {booking.userId?.name || <span className='italic text-muted-foreground'>Deleted User</span>}</p>
                         <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
                           <FaCalendarCheck /> {new Date(booking.scheduledAt).toLocaleString()}
                         </p>
@@ -278,7 +286,35 @@ const DashboardProvider = () => {
         )}
 
         {view === TABS.SETTINGS && (
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-3xl mx-auto space-y-6">
+            {/* INSTRUCTIONS for New Providers */}
+            {roleProfile && (!roleProfile.address || !roleProfile.location) && (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-4 rounded-lg flex gap-3">
+                <FaBolt className="text-yellow-600 dark:text-yellow-400 mt-1 shrink-0" />
+                <div>
+                  <h3 className="font-bold text-yellow-800 dark:text-yellow-300">Action Required: Complete Your Profile</h3>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
+                    To start creating services and receiving bookings, you must complete your profile settings below.
+                    <strong> Please fill in your Address, Location, and Bio.</strong>
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {!roleProfile?.isVerified && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4 rounded-lg flex gap-3">
+                <div className="bg-blue-100 dark:bg-blue-800 p-2 rounded-full h-fit">
+                  <FaUserCheck className="text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-blue-800 dark:text-blue-300">Account Pending Approval</h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
+                    Your account is currently waiting for admin approval. You can complete your profile setup while you wait.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <ProviderSettings roleProfile={roleProfile} user={user} onUpdate={loadUser} />
           </div>
         )}

@@ -77,7 +77,7 @@ const ChatWindow = ({ chatId, onChatRead }) => {
         <div className="flex flex-col h-[500px] border border-border rounded-lg bg-card shadow-sm overflow-hidden">
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/10">
                 {messages.map((msg) => {
-                    const isMyMessage = msg.sender._id === user._id || msg.sender === user._id; // Handle populated object or ID
+                    const isMyMessage = (msg.sender?._id || msg.sender) === user._id; // Handle populated object or ID safely
                     return (
                         <div key={msg._id} className={`flex ${isMyMessage ? 'justify-end' : 'justify-start'}`}>
                             <div
