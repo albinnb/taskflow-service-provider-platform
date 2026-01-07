@@ -230,8 +230,8 @@ const DashboardAdmin = () => {
     };
 
     return (
-        <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-background">
-            <aside className="w-64 border-r border-border bg-card hidden md:flex flex-col">
+        <div className="flex min-h-[calc(100vh-4rem)] bg-background">
+            <aside className="w-64 border-r border-border bg-card hidden md:flex flex-col sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto no-scrollbar">
                 <div className="p-4 border-b border-border">
                     <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Admin Console</h2>
                     <p className="font-bold text-foreground mt-1">Administrator</p>
@@ -250,7 +250,7 @@ const DashboardAdmin = () => {
                 </div>
             </aside>
 
-            <main className="flex-1 overflow-y-auto bg-muted/10 p-3 md:p-8 pb-20 md:pb-8">
+            <main className="flex-1 bg-muted/10 p-3 md:p-8 pb-20 md:pb-8">
                 <div className="max-w-6xl mx-auto">
                     <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground mb-4 md:mb-6 capitalize flex items-center gap-3">
                         {view === TABS.USERS && <FaUser className="text-primary" />}
