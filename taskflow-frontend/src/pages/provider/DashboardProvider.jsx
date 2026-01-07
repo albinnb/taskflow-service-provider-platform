@@ -114,9 +114,9 @@ const DashboardProvider = () => {
   if (!roleProfile) return <div className="p-20 text-center">Loading Profile...</div>;
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-background">
+    <div className="flex min-h-[calc(100vh-4rem)] bg-background">
       {/* SIDEBAR */}
-      <aside className="w-64 border-r border-border bg-card hidden md:flex flex-col">
+      <aside className="w-64 border-r border-border bg-card hidden md:flex flex-col sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto no-scrollbar">
         <div className="p-4 border-b border-border">
           <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Provider Portal</h2>
           <p className="font-bold text-foreground mt-1 truncate">{roleProfile.businessName}</p>
@@ -138,7 +138,7 @@ const DashboardProvider = () => {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 overflow-y-auto bg-muted/10 p-3 md:p-8 pb-20 md:pb-8">
+      <main className="flex-1 bg-muted/10 p-3 md:p-8 pb-20 md:pb-8">
 
         {/* Verification Banner */}
         {!roleProfile.isVerified && (
@@ -155,7 +155,7 @@ const DashboardProvider = () => {
           <div className="max-w-5xl mx-auto space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h1 className="text-2xl font-bold tracking-tight">Booking Management</h1>
-              <div className="w-full overflow-x-auto pb-2">
+              <div className="w-full overflow-x-auto pb-2 no-scrollbar"> {/* Added no-scrollbar */}
                 <div className="flex bg-card border border-border rounded-lg p-1 min-w-max">
                   {['pending', 'confirmed', 'completed', 'cancelled'].map(status => (
                     <button
@@ -353,6 +353,7 @@ const DashboardProvider = () => {
         </button>
       </div>
     </div>
+
   );
 };
 

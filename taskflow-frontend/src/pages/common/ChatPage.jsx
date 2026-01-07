@@ -46,11 +46,11 @@ const ChatPage = () => {
     return (
         <div className="container mx-auto px-4 py-8">
             <h1 className="text-3xl font-bold mb-8">My Messages</h1>
-            <div className="flex flex-col md:flex-row gap-6 h-[600px]">
+            <div className="flex flex-col md:flex-row gap-6 h-[calc(100vh-12rem)] min-h-[500px]">
                 {/* Chat List Sidebar */}
                 <div className={`w-full md:w-1/3 bg-card border border-border rounded-lg shadow-sm overflow-hidden flex flex-col ${selectedChatId ? 'hidden md:flex' : 'flex'}`}>
                     <div className="p-4 border-b border-border bg-muted/50 font-semibold text-foreground">Conversations</div>
-                    <div className="overflow-y-auto flex-1 bg-card">
+                    <div className="overflow-y-auto flex-1 bg-card no-scrollbar">
                         {chats.length === 0 ? (
                             <p className="p-4 text-gray-500 text-center">No conversations yet.</p>
                         ) : (

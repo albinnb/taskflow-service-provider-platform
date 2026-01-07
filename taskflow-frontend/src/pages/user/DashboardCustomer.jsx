@@ -117,9 +117,9 @@ const DashboardCustomer = () => {
   );
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-background">
+    <div className="flex min-h-[calc(100vh-4rem)] bg-background">
       {/* SIDEBAR - VS CODE STYLE */}
-      <aside className="w-64 border-r border-border bg-card hidden md:flex flex-col">
+      <aside className="w-64 border-r border-border bg-card hidden md:flex flex-col sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto no-scrollbar">
         <div className="p-4 border-b border-border">
           <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Explorer</h2>
           <p className="font-bold text-foreground mt-1 truncate">{user?.name}</p>
@@ -136,7 +136,7 @@ const DashboardCustomer = () => {
       </aside>
 
       {/* MAIN CONTENT AREA */}
-      <main className="flex-1 overflow-y-auto bg-muted/10 p-3 md:p-8 pb-20 md:pb-8">
+      <main className="flex-1 bg-muted/10 p-3 md:p-8 pb-20 md:pb-8">
         {activeTab === 'bookings' && (
           <div className="max-w-5xl mx-auto space-y-6">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -275,6 +275,7 @@ const DashboardCustomer = () => {
           </div>
         )}
       </main>
+
 
       {/* Modals */}
       <DisputeModal
