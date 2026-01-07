@@ -27,8 +27,10 @@ export const SocketProvider = ({ children }) => {
 
     useEffect(() => {
         if (isAuthenticated && user) {
-            // Connect to the backend (same host/port in dev usually, or configured URL)
-            const socketInstance = io('http://localhost:5000', {
+            // Connect to the backend (use env var or fallback)
+            // We strip '/api' if present because socket.io connects to the root usually
+            const SOCKET_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000').replace('/api', '');
+            const socketInstance = io(SOCKET_URL, {
                 auth: {
                     token: localStorage.getItem('taskflow-token'), // Matches TOKEN_KEY in AuthContext
                 },

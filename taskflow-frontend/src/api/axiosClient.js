@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // Define the base URL for your backend API
-// Ensure VITE_API_URL is set in your .env file
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Ensure VITE_API_BASE_URL is set in your .env file
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 const TOKEN_KEY = 'taskflow-token';
 
 const axiosClient = axios.create({
