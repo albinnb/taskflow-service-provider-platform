@@ -25,6 +25,7 @@ import AboutPage from './pages/common/AboutPage';
 import HelpPage from './pages/common/HelpPage';
 import HowItWorksPage from './pages/common/HowItWorksPage';
 import ChatPage from './pages/common/ChatPage';
+import PaymentSuccessPage from './pages/common/PaymentSuccessPage';
 
 // --- NEW IMPORTS ---
 import ProfileCompletionPage from './pages/user/ProfileCompletionPage';
@@ -76,6 +77,7 @@ function App() {
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/help" element={<HelpPage />} />
                   <Route path="/how-it-works" element={<HowItWorksPage />} />
+                  <Route path="/payment/success" element={<PaymentSuccessPage />} />
 
                   {/* Profile Completion Routes */}
                   <Route path="/profile/complete" element={<ProfileCompletionPage />} />

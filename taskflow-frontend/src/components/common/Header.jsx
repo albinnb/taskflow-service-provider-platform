@@ -138,9 +138,26 @@ const Header = () => {
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-2">
 
+
+          {/* Public Links (Always visible) */}
+          <div className="flex flex-col gap-2 mb-4">
+            <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Explore</div>
+            <Link to="/services" onClick={closeMobileMenu} className="flex items-center gap-4 p-3 rounded-lg hover:bg-secondary transition-colors text-foreground font-medium">
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary"><FaSearch size={14} /></div>
+              Services
+            </Link>
+            <Link to="/how-it-works" onClick={closeMobileMenu} className="flex items-center gap-4 p-3 rounded-lg hover:bg-secondary transition-colors text-foreground font-medium">
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary"><FaInfoCircle size={14} /></div>
+              How it Works
+            </Link>
+          </div>
+
+          <div className="h-px bg-border my-2"></div>
+
           {isAuthenticated ? (
             <>
               <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Account</div>
+
               <Link to={getDashboardLink()} onClick={closeMobileMenu} className="flex items-center gap-4 p-3 rounded-lg hover:bg-secondary transition-colors text-foreground font-medium">
                 <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary"><FaUserCircle size={14} /></div>
                 Dashboard

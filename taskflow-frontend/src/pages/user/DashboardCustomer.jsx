@@ -90,18 +90,8 @@ const DashboardCustomer = () => {
         name: "TaskFlow",
         description: `Payment for ${booking.serviceId.title}`,
         order_id: order.id,
-        handler: async function (response) {
-          try {
-            await coreApi.verifyPayment({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              bookingId: booking._id
-            });
-            toast.success('Payment successful!');
-            fetchBookings(filterStatus);
-          } catch (err) { toast.error('Payment verification failed.'); }
-        },
+        callback_url: `${window.location.origin}/payment/success?bookingId=${booking._id}`,
+        redirect: true,
         prefill: { email: user?.email, contact: user?.phone },
         theme: { color: "#007acc" }
       };
