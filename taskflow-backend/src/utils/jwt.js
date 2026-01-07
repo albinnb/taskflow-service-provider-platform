@@ -38,10 +38,10 @@ const sendTokenResponse = (res, user, isProfileComplete = false) => {
 	// 2. Define cookie options
 	const cookieOptions = {
 		// Set cookie to expire in 7 days (in milliseconds)
-		expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 
+		expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
 		httpOnly: true, // Prevent client-side JS access (XSS protection)
 		secure: process.env.NODE_ENV === 'production', // Use secure in production (HTTPS)
-		sameSite: 'strict', // CSRF protection
+		sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict', // Cross-site for production, strict for local
 	};
 
 	// 3. Set the access token cookie

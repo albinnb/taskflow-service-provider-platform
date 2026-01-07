@@ -35,9 +35,16 @@ connectDB();
 
 const app = express();
 const httpServer = createServer(app);
+
+// Allowed Origins
+const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'];
+if (process.env.CLIENT_URL) {
+  allowedOrigins.push(process.env.CLIENT_URL);
+}
+
 const io = new Server(httpServer, {
   cors: {
-    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
+    origin: allowedOrigins,
     credentials: true // Allow cookies
   }
 });
@@ -50,7 +57,13 @@ const PORT = process.env.PORT || 5000;
 
 app.use(helmet());
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
