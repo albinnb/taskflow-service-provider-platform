@@ -16,6 +16,7 @@ const CategoryManagement = () => {
     const [loading, setLoading] = useState(true);
     const [newCategoryName, setNewCategoryName] = useState('');
     const [newCategorySlug, setNewCategorySlug] = useState('');
+    const [newCategoryImage, setNewCategoryImage] = useState('');
 
     const fetchCategories = async () => {
         setLoading(true);
@@ -38,11 +39,13 @@ const CategoryManagement = () => {
         try {
             await axiosClient.post('/categories', {
                 name: newCategoryName,
-                slug: newCategorySlug
+                slug: newCategorySlug,
+                image: newCategoryImage // Include image in request
             });
             toast.success('Category created!');
             setNewCategoryName('');
             setNewCategorySlug('');
+            setNewCategoryImage('');
             fetchCategories();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to create category');
@@ -94,6 +97,16 @@ const CategoryManagement = () => {
                             onChange={(e) => setNewCategorySlug(e.target.value)}
                             className="w-full p-2 rounded-md border border-input bg-background text-muted-foreground"
                             required
+                        />
+                    </div>
+                    <div className="flex-1">
+                        <label className="block text-sm font-medium mb-1">Image URL (Optional)</label>
+                        <input
+                            type="text"
+                            value={newCategoryImage}
+                            onChange={(e) => setNewCategoryImage(e.target.value)}
+                            placeholder="https://..."
+                            className="w-full p-2 rounded-md border border-input bg-background"
                         />
                     </div>
                     <Button type="submit">Create</Button>

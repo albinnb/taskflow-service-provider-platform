@@ -65,7 +65,8 @@ const ServicesPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {categories.map((cat) => {
               const Icon = iconMap[cat.slug] || FaStar;
-              const imageUrl = imageMap[cat.slug] || 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=500&auto=format&fit=crop&q=60';
+              // Use category image if available, otherwise fallback to map or default
+              const imageUrl = cat.image || imageMap[cat.slug] || 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=500&auto=format&fit=crop&q=60';
 
               return (
                 <div

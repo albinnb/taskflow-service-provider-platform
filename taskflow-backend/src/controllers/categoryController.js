@@ -21,7 +21,7 @@ export const getCategories = asyncHandler(async (req, res) => {
  * @access  Private/Admin
  */
 export const createCategory = asyncHandler(async (req, res) => {
-  const { name, slug } = req.body;
+  const { name, slug, image } = req.body;
 
   if (!name || !slug) {
     res.status(400);
@@ -34,7 +34,7 @@ export const createCategory = asyncHandler(async (req, res) => {
     throw new Error('Category already exists');
   }
 
-  const category = await Category.create({ name, slug });
+  const category = await Category.create({ name, slug, image });
 
   res.status(201).json({
     success: true,
