@@ -1,23 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { coreApi } from '../../api/serviceApi';
 import { toast } from 'react-toastify';
-import { FaUserShield, FaCheckCircle, FaTimesCircle, FaTrash, FaUser, FaBuilding, FaClipboardList, FaGavel, FaBan, FaUnlock, FaSignOutAlt } from 'react-icons/fa';
+import { FaUserShield, FaCheckCircle, FaTimesCircle, FaTrash, FaUser, FaBuilding, FaClipboardList, FaGavel, FaBan, FaUnlock, FaSignOutAlt, FaChartBar, FaTags, FaMoneyBillWave } from 'react-icons/fa';
 import useAuth from '../../hooks/useAuth';
 import DisputeDetailsModal from '../../components/admin/DisputeDetailsModal';
+import CategoryManagement from '../../components/admin/CategoryManagement'; // Import new component
 import { cn } from '../../lib/utils';
 import { Button } from '../../components/ui/Button';
+import axiosClient from '../../api/axiosClient'; // Direct axios for admin stats
 
 const TABS = {
+    DASHBOARD: 'dashboard',
     USERS: 'users',
     PROVIDERS: 'providers',
     SERVICE_APPROVALS: 'service_approvals',
     DISPUTES: 'disputes',
+    CATEGORIES: 'categories',
 };
 
 const DashboardAdmin = () => {
     const { logout } = useAuth();
-    const [view, setView] = useState(TABS.USERS);
+    const [view, setView] = useState(TABS.DASHBOARD);
     const [data, setData] = useState([]);
+    const [stats, setStats] = useState(null); // State for dashboard stats
     const [loading, setLoading] = useState(true);
 
     const [selectedDispute, setSelectedDispute] = useState(null);
@@ -31,7 +36,11 @@ const DashboardAdmin = () => {
         setLoading(true);
         setData([]);
         try {
-            if (currentView === TABS.USERS) {
+            if (currentView === TABS.DASHBOARD) {
+                // Fetch Admin Stats
+                const res = await axiosClient.get('/admin/dashboard');
+                setStats(res.data.data);
+            } else if (currentView === TABS.USERS) {
                 const res = await coreApi.getUsers({ sort: 'role' });
                 setData(res.data.data);
             } else if (currentView === TABS.PROVIDERS) {
@@ -44,8 +53,10 @@ const DashboardAdmin = () => {
                 const res = await coreApi.getDisputes();
                 setData(res.data.data);
             }
+            // Categories handled by component itself
         } catch (error) {
-            toast.error('Failed to load admin data.');
+            console.error(error);
+            // toast.error('Failed to load admin data.');
             setData([]);
         } finally {
             setLoading(false);
@@ -117,7 +128,43 @@ const DashboardAdmin = () => {
         </button>
     );
 
+    const StatCard = ({ title, value, icon: Icon, color }) => (
+        <div className="bg-card border border-border rounded-xl p-6 shadow-sm flex items-center justify-between">
+            <div>
+                <p className="text-sm font-medium text-muted-foreground uppercase">{title}</p>
+                <p className="text-3xl font-bold text-foreground mt-1">{value}</p>
+            </div>
+            <div className={cn("p-3 rounded-full opacity-20", color)}>
+                <Icon className={cn("h-8 w-8 opacity-100", color.replace('bg-', 'text-'))} />
+            </div>
+        </div>
+    );
+
     const renderContent = () => {
+        if (view === TABS.DASHBOARD) {
+            if (loading) return <div className="p-20 text-center text-muted-foreground">Loading Stats...</div>;
+            return (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <StatCard title="Total Users" value={stats?.totalUsers || 0} icon={FaUser} color="bg-blue-500" />
+                    <StatCard title="Total Revenue" value={`₹${stats?.totalRevenue || 0}`} icon={FaMoneyBillWave} color="bg-emerald-500" />
+                    <StatCard title="Total Services" value={stats?.totalServices || 0} icon={FaClipboardList} color="bg-purple-500" />
+                    <StatCard title="Pending Approvals" value={stats?.pendingServicesCount || 0} icon={FaCheckCircle} color="bg-orange-500" />
+
+                    {/* Recent Activity Section could go here */}
+                    <div className="col-span-full mt-8">
+                        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+                            <h3 className="text-lg font-bold mb-4">Welcome, Administrator</h3>
+                            <p className="text-muted-foreground">Use the sidebar to manage users, providers, services, and categories.</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        if (view === TABS.CATEGORIES) {
+            return <CategoryManagement />;
+        }
+
         if (loading) return <div className="p-20 text-center text-muted-foreground">Loading...</div>;
         if (!data || data.length === 0) return <div className="p-20 text-center border-2 border-dashed border-border rounded-xl text-muted-foreground">No data found.</div>;
 
@@ -237,8 +284,10 @@ const DashboardAdmin = () => {
                     <p className="font-bold text-foreground mt-1">Administrator</p>
                 </div>
                 <nav className="flex-1 py-4 space-y-1">
+                    <SidebarItem id={TABS.DASHBOARD} icon={FaChartBar} label="Dashboard" />
                     <SidebarItem id={TABS.USERS} icon={FaUser} label="Users" />
                     <SidebarItem id={TABS.PROVIDERS} icon={FaBuilding} label="Taskers" />
+                    <SidebarItem id={TABS.CATEGORIES} icon={FaTags} label="Categories" />
                     <SidebarItem id={TABS.SERVICE_APPROVALS} icon={FaClipboardList} label="Approvals" />
                     <SidebarItem id={TABS.DISPUTES} icon={FaGavel} label="Disputes" />
                 </nav>
@@ -253,8 +302,10 @@ const DashboardAdmin = () => {
             <main className="flex-1 bg-muted/10 p-3 md:p-8 pb-20 md:pb-8">
                 <div className="max-w-6xl mx-auto">
                     <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground mb-4 md:mb-6 capitalize flex items-center gap-3">
+                        {view === TABS.DASHBOARD && <FaChartBar className="text-primary" />}
                         {view === TABS.USERS && <FaUser className="text-primary" />}
                         {view === TABS.PROVIDERS && <FaBuilding className="text-primary" />}
+                        {view === TABS.CATEGORIES && <FaTags className="text-primary" />}
                         {view === TABS.SERVICE_APPROVALS && <FaClipboardList className="text-primary" />}
                         {view === TABS.DISPUTES && <FaGavel className="text-primary" />}
                         {view.replace('_', ' ')} Management
@@ -273,6 +324,13 @@ const DashboardAdmin = () => {
             {/* MOBILE BOTTOM NAVIGATION */}
             <div className="md:hidden fixed bottom-0 z-40 w-full bg-card border-t border-border flex justify-around items-center p-2 safe-area-pb">
                 <button
+                    onClick={() => setView(TABS.DASHBOARD)}
+                    className={cn("flex flex-col items-center justify-center w-full py-1", view === TABS.DASHBOARD ? "text-primary" : "text-muted-foreground")}
+                >
+                    <FaChartBar className="h-5 w-5 mb-1" />
+                    <span className="text-[10px] font-medium">Home</span>
+                </button>
+                <button
                     onClick={() => setView(TABS.USERS)}
                     className={cn("flex flex-col items-center justify-center w-full py-1", view === TABS.USERS ? "text-primary" : "text-muted-foreground")}
                 >
@@ -280,11 +338,11 @@ const DashboardAdmin = () => {
                     <span className="text-[10px] font-medium">Users</span>
                 </button>
                 <button
-                    onClick={() => setView(TABS.PROVIDERS)}
-                    className={cn("flex flex-col items-center justify-center w-full py-1", view === TABS.PROVIDERS ? "text-primary" : "text-muted-foreground")}
+                    onClick={() => setView(TABS.CATEGORIES)}
+                    className={cn("flex flex-col items-center justify-center w-full py-1", view === TABS.CATEGORIES ? "text-primary" : "text-muted-foreground")}
                 >
-                    <FaBuilding className="h-5 w-5 mb-1" />
-                    <span className="text-[10px] font-medium">Taskers</span>
+                    <FaTags className="h-5 w-5 mb-1" />
+                    <span className="text-[10px] font-medium">Cats</span>
                 </button>
                 <button
                     onClick={() => setView(TABS.SERVICE_APPROVALS)}
@@ -292,13 +350,6 @@ const DashboardAdmin = () => {
                 >
                     <FaClipboardList className="h-5 w-5 mb-1" />
                     <span className="text-[10px] font-medium">Approvals</span>
-                </button>
-                <button
-                    onClick={() => setView(TABS.DISPUTES)}
-                    className={cn("flex flex-col items-center justify-center w-full py-1", view === TABS.DISPUTES ? "text-primary" : "text-muted-foreground")}
-                >
-                    <FaGavel className="h-5 w-5 mb-1" />
-                    <span className="text-[10px] font-medium">Disputes</span>
                 </button>
             </div>
         </div>

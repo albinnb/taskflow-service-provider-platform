@@ -29,6 +29,7 @@ import availabilityRoutes from './routes/availabilityRoutes.js';
 import disputeRoutes from './routes/disputeRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 // Connect to MongoDB (Must run AFTER dotenv.config())
 connectDB();
@@ -77,8 +78,6 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 app.use('/api', apiLimiter);
-
-// === API ROUTES ===
 app.get('/', (req, res) => res.send('LocalLink API is running...'));
 
 app.use('/api/auth', authRoutes);
@@ -93,6 +92,7 @@ app.use('/api/availability', availabilityRoutes);
 app.use('/api/disputes', disputeRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/chats', chatRoutes);
+app.use('/api/admin', adminRoutes);
 
 // === ERROR HANDLING MIDDLEWARE ===
 app.use(notFound);
