@@ -39,7 +39,9 @@ const DashboardAdmin = () => {
     const [selectedDispute, setSelectedDispute] = useState(null);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
-    // Mobile Sidebar State removed
+    // URL Params
+    const [searchParams, setSearchParams] = useSearchParams();
+
 
 
 
