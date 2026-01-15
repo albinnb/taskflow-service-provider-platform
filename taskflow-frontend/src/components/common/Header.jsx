@@ -258,11 +258,44 @@ const Header = () => {
             <>
               <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Account</div>
 
+              {/* ADMIN LINKS */}
+              {user?.role === 'admin' && (
+                <div className="flex flex-col gap-1 ml-2 border-l-2 border-border pl-4 mb-2">
+                  <Link to="/admin/dashboard?tab=users" onClick={closeMobileMenu} className="py-2 text-sm font-medium hover:text-primary">Users</Link>
+                  <Link to="/admin/dashboard?tab=providers" onClick={closeMobileMenu} className="py-2 text-sm font-medium hover:text-primary">Taskers</Link>
+                  <Link to="/admin/dashboard?tab=all_services" onClick={closeMobileMenu} className="py-2 text-sm font-medium hover:text-primary">All Services</Link>
+                  <Link to="/admin/dashboard?tab=all_bookings" onClick={closeMobileMenu} className="py-2 text-sm font-medium hover:text-primary">All Bookings</Link>
+                  <Link to="/admin/dashboard?tab=revenue" onClick={closeMobileMenu} className="py-2 text-sm font-medium hover:text-primary">Revenue</Link>
+                  <Link to="/admin/dashboard?tab=disputes" onClick={closeMobileMenu} className="py-2 text-sm font-medium hover:text-primary">Disputes</Link>
+                </div>
+              )}
+
+              {/* PROVIDER LINKS */}
+              {user?.role === 'provider' && (
+                <div className="flex flex-col gap-1 ml-2 border-l-2 border-border pl-4 mb-2">
+                  <Link to="/provider/dashboard?tab=bookings" onClick={closeMobileMenu} className="py-2 text-sm font-medium hover:text-primary">Bookings</Link>
+                  <Link to="/provider/dashboard?tab=services" onClick={closeMobileMenu} className="py-2 text-sm font-medium hover:text-primary">My Services</Link>
+                  <Link to="/provider/dashboard?tab=analytics" onClick={closeMobileMenu} className="py-2 text-sm font-medium hover:text-primary">Analytics</Link>
+                  <Link to="/provider/dashboard?tab=settings" onClick={closeMobileMenu} className="py-2 text-sm font-medium hover:text-primary">Settings</Link>
+                </div>
+              )}
+
+              {/* CUSTOMER LINKS */}
+              {user?.role === 'customer' && (
+                <div className="flex flex-col gap-1 ml-2 border-l-2 border-border pl-4 mb-2">
+                  <Link to="/customer/dashboard?tab=bookings" onClick={closeMobileMenu} className="py-2 text-sm font-medium hover:text-primary">My Bookings</Link>
+                  <Link to="/customer/dashboard?tab=profile" onClick={closeMobileMenu} className="py-2 text-sm font-medium hover:text-primary">Profile</Link>
+                </div>
+              )}
+
+              {/* DASHBOARD HOME LINK (Fallback/Main) */}
               <Link to={getDashboardLink()} onClick={closeMobileMenu} className="flex items-center gap-4 p-3 rounded-lg hover:bg-secondary transition-colors text-foreground font-medium">
                 <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary"><FaUserCircle size={14} /></div>
-                Dashboard
+                Dashboard Home
               </Link>
+
               <Link to="/messages" onClick={closeMobileMenu} className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary transition-colors text-foreground font-medium">
+
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary"><FaMoon size={14} /></div>
                   Messages
