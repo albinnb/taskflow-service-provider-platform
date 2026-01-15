@@ -4,6 +4,9 @@ import Provider from '../models/Provider.js';
 import ApiFeatures from '../utils/ApiFeatures.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import mongoose from 'mongoose';
+import Notification from '../models/Notification.js';
+import Booking from '../models/Booking.js';
+import ActivityLog from '../models/ActivityLog.js';
 
 import Category from '../models/Category.js'; // Import Category
 
@@ -89,14 +92,45 @@ const getServices = asyncHandler(async (req, res) => {
         delete queryObj.lat;
         delete queryObj.lng;
 
-        // Use ApiFeatures for text search and category filtering and field limiting
-        // WARN: We cannot use ApiFeatures for pagination/sorting because we need to sort by distance first
+        // Advanced Fuzzy Search Logic for Geo-Search
+        // Advanced Fuzzy Search Logic for Geo-Search
+        // Advanced Text Search Logic for Geo-Search
+        // We utilize the Text Index on Service (title, description, tags)
+        let searchFilter = { ...queryObj };
+        let projection = {};
+        let sortOption = {}; // Default sort handled later if empty
+
+        if (req.query.keyword) {
+            const keyword = req.query.keyword;
+
+            // 1. Find providers matching this keyword (Business Name)
+            const providersByName = await Provider.find({
+                businessName: { $regex: keyword, $options: 'i' }
+            }).select('_id');
+            const matchedProviderIds = providersByName.map(p => p._id);
+
+            // 2. Build the OR Query: Match Text Index OR Provider Name
+            searchFilter.$or = [
+                { $text: { $search: keyword } },
+                { providerId: { $in: matchedProviderIds } }
+            ];
+
+            // Add Text Score for sorting relevance
+            projection = { score: { $meta: "textScore" } };
+            // Note: We prioritize distance sort below, but we could mix them if needed.
+            // For now, Geo-Search usually prioritizes distance. 
+            // If we want text relevance to break ties, we'd need more complex logic.
+        } else {
+            // Handle explicit queryObj if no keyword but other filters exist
+            // (Already handled by spreading queryObj)
+        }
+
         const filterBuilder = new ApiFeatures(
-            Service.find().populate('providerId', 'businessName ratingAvg location address userId'),
+            Service.find(searchFilter, projection).populate('providerId', 'businessName ratingAvg location address userId'),
             queryObj
         )
-            .search()
             .filter();
+
         // .sort() -> We skip db sorting to sort by distance
         // .paginate() -> We skip db pagination
 
@@ -132,24 +166,66 @@ const getServices = asyncHandler(async (req, res) => {
     } else {
         // --- STANDARD NON-GEO QUERY ---
 
+
         // 1. Build the filter object first
-        const filterBuilder = new ApiFeatures(Service.find(), req.query)
-            .search()
-            .filter();
+        // Advanced Fuzzy Search: Split keyword into terms and ensure ALL terms match either Title OR Description
+        // 1. Build the filter object
+        // Advanced Text Search using MongoDB $text index
+        let searchFilter = {};
+        let projection = {};
+        let isTextSearch = false;
+
+        if (req.query.keyword) {
+            isTextSearch = true;
+            const keyword = req.query.keyword;
+
+            // 1. Find providers matching this keyword (Business Name)
+            const providersByName = await Provider.find({
+                businessName: { $regex: keyword, $options: 'i' }
+            }).select('_id');
+            const matchedProviderIds = providersByName.map(p => p._id);
+
+            // 2. Build Query: Match Text Index OR Provider Name
+            searchFilter.$or = [
+                { $text: { $search: keyword } },
+                { providerId: { $in: matchedProviderIds } }
+            ];
+
+            projection = { score: { $meta: "textScore" } };
+
+            // Remove keyword from req.query so ApiFeatures doesn't try to filter by it
+            delete req.query.keyword;
+        }
+
+
+
+        const filterBuilder = new ApiFeatures(Service.find(searchFilter, projection), req.query)
+            .filter(); // .search() removed as we did it manually
 
         // Get the final merged filter object
-        const finalFilter = filterBuilder.getQuery();
+        const finalFilter = { ...searchFilter, ...filterBuilder.getQuery() };
         finalFilter.approvalStatus = 'approved';
 
         // 2. Use standard count
         const totalCount = await Service.countDocuments(finalFilter);
 
         // 3. Execute the main query
-        const features = new ApiFeatures(
-            Service.find(finalFilter).populate('providerId', 'businessName ratingAvg address location userId'),
-            req.query
-        )
-            .sort()
+        let query = Service.find(finalFilter, projection)
+            .populate('providerId', 'businessName ratingAvg address location userId');
+
+        // Apply Sorting
+        if (req.query.sort) {
+            const sortBy = req.query.sort.split(',').join(' ');
+            query = query.sort(sortBy);
+        } else if (isTextSearch) {
+            // Default to Relevance Score if keyword is present and no specific sort requested
+            query = query.sort({ score: { $meta: "textScore" } });
+        } else {
+            query = query.sort('-createdAt');
+        }
+
+        // Apply Pagination & Limiting
+        const features = new ApiFeatures(query, req.query)
             .limitFields()
             .paginate();
 
@@ -205,8 +281,12 @@ const createService = asyncHandler(async (req, res) => {
     }
 
     req.body.providerId = provider._id;
-    // Default to pending for QC
-    req.body.approvalStatus = 'pending';
+    // Auto-approve if provider is verified (Trusted Provider)
+    if (provider.isVerified) {
+        req.body.approvalStatus = 'approved';
+    } else {
+        req.body.approvalStatus = 'pending';
+    }
 
     const service = await Service.create(req.body);
 
@@ -308,6 +388,16 @@ const updateServiceStatus = asyncHandler(async (req, res) => {
     if (!service) {
         res.status(404); // Or 404 if not found
         throw new Error('Service not found');
+    }
+
+    // LOG ACTION
+    if (req.user.role === 'admin') {
+        await ActivityLog.create({
+            adminId: req.user.id,
+            action: `SERVICE_${status.toUpperCase()}`,
+            targetId: service._id,
+            details: `${status === 'approved' ? 'Approved' : 'Rejected'} service "${service.title}"`
+        });
     }
 
     res.status(200).json({ success: true, data: service });

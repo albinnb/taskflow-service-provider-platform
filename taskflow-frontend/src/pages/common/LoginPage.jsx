@@ -17,7 +17,7 @@ const LoginPage = () => {
   if (isAuthenticated) {
     if (user.role === 'admin') return <Navigate to="/admin/dashboard" />;
     if (user.role === 'provider') return <Navigate to="/provider/dashboard" />;
-    return <Navigate to="/customer/dashboard" />;
+    return <Navigate to="/" />;
   }
 
   const onSubmit = async (data) => {

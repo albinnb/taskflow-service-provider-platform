@@ -6,13 +6,71 @@ import { useContext } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { FaUserCircle, FaMoon, FaSun, FaBars, FaTimes, FaSearch, FaInfoCircle, FaQuestionCircle, FaSignOutAlt } from 'react-icons/fa';
 import { Button } from '../ui/Button'; // Import Shadcn-style Button
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react'; // Added useEffect, useRef
+import { FaBell } from 'react-icons/fa'; // Added FaBell
+import notificationApi from '../../api/notificationApi'; // Import Notification API
 
 const Header = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const { totalUnreadCount } = useContext(SocketContext);
   const { theme, toggleTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Notification State
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const notifRef = useRef(null);
+
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+      // Poll every 30s
+      const interval = setInterval(fetchNotifications, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const fetchNotifications = async () => {
+    try {
+      const { data } = await notificationApi.getMyNotifications();
+      setNotifications(data.data);
+      setUnreadCount(data.data.filter(n => !n.isRead).length);
+    } catch (error) {
+      console.error("Failed to fetch notifications", error);
+    }
+  };
+
+  const handleMarkRead = async (id) => {
+    try {
+      await notificationApi.markRead(id);
+      setNotifications(notifications.map(n => n._id === id ? { ...n, isRead: true } : n));
+      setUnreadCount(prev => prev > 0 ? prev - 1 : 0);
+    } catch (error) {
+      console.error("Failed to mark read", error);
+    }
+  };
+
+  const handleClearAll = async () => {
+    try {
+      await notificationApi.deleteAll();
+      setNotifications([]); // Clear list
+      setUnreadCount(0);
+    } catch (error) {
+      console.error("Failed to clear notifications", error);
+    }
+  };
+
+  // Close Dropdowns on Click Outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setIsNotifOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
@@ -61,6 +119,48 @@ const Header = () => {
 
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
+              {/* Notification Bell */}
+              <div className="relative" ref={notifRef}>
+                <button
+                  onClick={() => setIsNotifOpen(!isNotifOpen)}
+                  className="p-2 text-muted-foreground hover:bg-secondary rounded-full transition-colors relative"
+                >
+                  <FaBell size={20} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Notification Dropdown */}
+                {isNotifOpen && (
+                  <div className="absolute right-0 mt-2 w-80 bg-background rounded-md shadow-lg py-1 z-50 border border-border max-h-96 overflow-y-auto">
+                    <div className="px-4 py-2 border-b border-border flex justify-between items-center bg-muted/50">
+                      <span className="font-semibold text-sm">Notifications</span>
+                      <div className="flex gap-2">
+                        <button onClick={handleClearAll} className="text-xs text-primary hover:underline">Clear All</button>
+                        <button onClick={fetchNotifications} className="text-xs text-muted-foreground hover:text-primary">Refresh</button>
+                      </div>
+                    </div>
+                    {notifications.length === 0 ? (
+                      <div className="px-4 py-4 text-center text-sm text-muted-foreground">No notifications</div>
+                    ) : (
+                      notifications.map(notif => (
+                        <div
+                          key={notif._id}
+                          className={`px-4 py-3 border-b border-border hover:bg-muted/50 cursor-pointer ${!notif.isRead ? 'bg-primary/5' : ''}`}
+                          onClick={() => !notif.isRead && handleMarkRead(notif._id)}
+                        >
+                          <p className="text-sm text-foreground">{notif.message}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{new Date(notif.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+
               <Link to={getDashboardLink()}>
                 <Button variant="ghost" size="sm" className="font-semibold text-muted-foreground hover:text-foreground">
                   Dashboard

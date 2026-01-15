@@ -40,6 +40,7 @@ const DashboardProvider = () => {
   const [selectedStatus, setSelectedStatus] = useState('pending');
   const [editingService, setEditingService] = useState(null);
   const [analyticsData, setAnalyticsData] = useState(null);
+  const [extendingBookingId, setExtendingBookingId] = useState(null);
 
   useEffect(() => {
     if (roleProfile && isAuthenticated) {
@@ -84,6 +85,55 @@ const DashboardProvider = () => {
       fetchData();
     } catch (error) {
       toast.error('Failed to update status.');
+    }
+  };
+
+  const handleExtendBooking = async (bookingId) => {
+    // Prevent multiple clicks for the same booking
+    if (extendingBookingId === bookingId) return;
+
+    setExtendingBookingId(bookingId);
+
+    const extendAction = async () => {
+      const token = localStorage.getItem('taskflow-token');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/bookings/${bookingId}/extend`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to extend booking');
+      return data;
+    };
+
+    const promise = extendAction();
+
+    toast.promise(
+      promise,
+      {
+        pending: 'Calculating schedule shifts...',
+        success: {
+          render({ data }) {
+            fetchData();
+            return data.message || "Booking extended by 30 mins.";
+          }
+        },
+        error: {
+          render({ data }) {
+            return data.message || 'Failed to extend booking';
+          }
+        }
+      }
+    );
+
+    try {
+      await promise;
+    } catch (error) {
+      // Handled by toast
+    } finally {
+      setExtendingBookingId(null);
     }
   };
 
@@ -145,8 +195,8 @@ const DashboardProvider = () => {
           <div className="mb-6 p-4 bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-200 rounded-lg border border-orange-200 dark:border-orange-800 flex items-center gap-3">
             <FaUserCheck className="h-5 w-5" />
             <div>
-              <p className="font-bold">Pending Verification</p>
-              <p className="text-sm">Your account is under review. You can manage services but cannot accept bookings yet.</p>
+              <p className="font-bold">Account Pending Approval</p>
+              <p className="text-sm">You can create services, but they will require Admin Approval before going live. Once you are a <strong>Trusted Provider</strong> (Approved), your services will go live immediately.</p>
             </div>
           </div>
         )}
@@ -208,6 +258,15 @@ const DashboardProvider = () => {
                         {booking.status === 'confirmed' && (
                           <>
                             <Button size="sm" onClick={() => handleUpdateStatus(booking._id, 'completed')}>Complete</Button>
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-amber-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                              onClick={() => handleExtendBooking(booking._id)}
+                              disabled={extendingBookingId === booking._id}
+                            >
+                              {extendingBookingId === booking._id ? 'Processing...' : 'Running Late (+30m)'}
+                            </Button>
                             <Button size="sm" variant="outline" onClick={() => handleUpdateStatus(booking._id, 'cancelled')}>Cancel</Button>
                           </>
                         )}
@@ -264,22 +323,159 @@ const DashboardProvider = () => {
 
         {view === TABS.ANALYTICS && analyticsData && (
           <div className="max-w-5xl mx-auto space-y-8">
-            <h1 className="text-2xl font-bold tracking-tight">Performance</h1>
+            <h1 className="text-2xl font-bold tracking-tight mb-6">Performance Dashboard</h1>
+
+            {/* 1. KEY METRICS CARDS */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="p-6 bg-card border border-border rounded-xl shadow-sm">
-                <h3 className="text-sm font-medium text-muted-foreground">Total Revenue</h3>
-                <p className="text-3xl font-bold text-foreground mt-2">₹{analyticsData.totalRevenue.toLocaleString()}</p>
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Revenue</h3>
+                <p className="text-3xl font-bold text-foreground mt-2">₹{(analyticsData.totalRevenue || 0).toLocaleString()}</p>
               </div>
               <div className="p-6 bg-card border border-border rounded-xl shadow-sm">
-                <h3 className="text-sm font-medium text-muted-foreground">Completed Jobs</h3>
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Completed Jobs</h3>
                 <p className="text-3xl font-bold text-foreground mt-2">{analyticsData.completedBookings}</p>
               </div>
               <div className="p-6 bg-card border border-border rounded-xl shadow-sm">
-                <h3 className="text-sm font-medium text-muted-foreground">Rating</h3>
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Overall Rating</h3>
                 <div className="flex items-center gap-2 mt-2">
                   <p className="text-3xl font-bold text-foreground">{analyticsData.averageRating.toFixed(1)}</p>
                   <FaStar className="text-yellow-400 h-6 w-6" />
+                  <span className="text-sm text-muted-foreground">({analyticsData.totalReviews} reviews)</span>
                 </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* 2. MONTHLY REVENUE CHART (Simple CSS Bar Chart) */}
+              <div className="p-6 bg-card border border-border rounded-xl shadow-sm">
+                <h3 className="font-bold text-lg mb-6">Revenue Trend (Last 6 Months)</h3>
+                <div className="flex items-end justify-between h-48 gap-2">
+                  {/* Chart Logic: Generate last 6 months list and fill data */}
+                  {(() => {
+                    const today = new Date();
+                    const last6Months = Array.from({ length: 6 }, (_, i) => {
+                      const d = new Date(today.getFullYear(), today.getMonth() - 5 + i, 1);
+                      return {
+                        monthIdx: d.getMonth() + 1,
+                        label: d.toLocaleString('default', { month: 'short' })
+                      };
+                    });
+
+                    // Map actual data to the 6 months skeleton
+                    const chartData = last6Months.map(m => {
+                      const found = (analyticsData.monthlyRevenue || []).find(r => r._id === m.monthIdx);
+                      return { ...m, revenue: found ? found.revenue : 0 };
+                    });
+
+                    const maxRev = Math.max(...chartData.map(d => d.revenue)) || 1;
+
+                    return chartData.map((m) => (
+                      <div key={m.label} className="flex flex-col items-center flex-1 group relative">
+                        {/* Tooltip */}
+                        <div className="absolute -top-8 bg-popover text-popover-foreground text-xs font-bold px-2 py-1 rounded shadow-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                          ₹{m.revenue.toLocaleString()}
+                        </div>
+                        <div
+                          className="w-full mx-1 bg-primary/20 hover:bg-primary transition-all duration-300 rounded-t-sm"
+                          style={{ height: `${Math.max((m.revenue / maxRev) * 100, 2)}%` }} // Min height 2% for visibility
+                        ></div>
+                        <div className="text-[10px] text-muted-foreground mt-2 uppercase">{m.label}</div>
+                      </div>
+                    ));
+                  })()}
+                  {(!analyticsData.monthlyRevenue || analyticsData.monthlyRevenue.length === 0) && (
+                    <div className="w-full text-center text-muted-foreground self-center">No revenue data yet.</div>
+                  )}
+                </div>
+              </div>
+
+              {/* 3. TOP PERFORMING SERVICES */}
+              <div className="p-6 bg-card border border-border rounded-xl shadow-sm">
+                <h3 className="font-bold text-lg mb-6">Top Earnings Services</h3>
+                <div className="space-y-4">
+                  {(analyticsData.topServices || []).map((s, i) => (
+                    <div key={i}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="font-medium truncate max-w-[200px]">{s.title}</span>
+                        <span className="font-bold text-green-600">₹{s.totalRevenue.toLocaleString()}</span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-2">
+                        <div
+                          className="bg-primary h-2 rounded-full"
+                          style={{ width: `${(s.totalRevenue / ((analyticsData.topServices[0]?.totalRevenue) || 1)) * 100}%` }}
+                        ></div>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 text-right">{s.bookingsCount} bookings</p>
+                    </div>
+                  ))}
+                  {(!analyticsData.topServices || analyticsData.topServices.length === 0) && (
+                    <div className="text-center text-muted-foreground">No services data yet.</div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 4. RECENT REVIEWS */}
+            <div className="p-6 bg-card border border-border rounded-xl shadow-sm">
+              <h3 className="font-bold text-lg mb-4">Recent Reviews</h3>
+              <div className="space-y-4">
+                {(analyticsData.recentReviews || []).length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">No reviews yet.</p>
+                ) : (
+                  analyticsData.recentReviews.map((review) => (
+                    <div key={review._id} className="border-b border-border pb-4 last:border-0 last:pb-0">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                          <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center font-bold text-xs">
+                            {review.userId?.name?.[0] || '?'}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold">{review.userId?.name || 'Deleted User'}</p>
+                            <div className="flex text-yellow-500 text-xs">
+                              {[...Array(5)].map((_, i) => (
+                                <FaStar key={i} className={i < review.rating ? "" : "text-muted-foreground/30"} />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">{new Date(review.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      <p className="text-sm text-foreground mt-2 pl-10">{review.comment}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* 5. RECENT COMPLETED JOBS LIST */}
+            <div className="p-6 bg-card border border-border rounded-xl shadow-sm">
+              <h3 className="font-bold text-lg mb-4">Last 10 Completed Jobs</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
+                    <tr>
+                      <th className="px-4 py-3">Date</th>
+                      <th className="px-4 py-3">Service</th>
+                      <th className="px-4 py-3">Customer</th>
+                      <th className="px-4 py-3">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {(analyticsData.recentCompletedBookings || []).map((booking) => (
+                      <tr key={booking._id} className="hover:bg-muted/30">
+                        <td className="px-4 py-3">{new Date(booking.scheduledAt).toLocaleDateString()}</td>
+                        <td className="px-4 py-3">{booking.serviceId?.title || 'Unknown Service'}</td>
+                        <td className="px-4 py-3">{booking.userId?.name || 'Deleted User'}</td>
+                        <td className="px-4 py-3 font-bold text-green-600">₹{booking.totalPrice}</td>
+                      </tr>
+                    ))}
+                    {(analyticsData.recentCompletedBookings || []).length === 0 && (
+                      <tr>
+                        <td colSpan="4" className="px-4 py-6 text-center text-muted-foreground">No completed jobs yet.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -309,7 +505,7 @@ const DashboardProvider = () => {
                 <div>
                   <h3 className="font-bold text-blue-800 dark:text-blue-300">Account Pending Approval</h3>
                   <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
-                    Your account is currently waiting for admin approval. You can complete your profile setup while you wait.
+                    Your account is under review. You can create services, but they will require manual approval. Once approved, you will become a "Trusted Provider".
                   </p>
                 </div>
               </div>

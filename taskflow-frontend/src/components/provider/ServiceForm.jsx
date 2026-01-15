@@ -281,9 +281,9 @@ const ServiceForm = ({ serviceId, providerId, onClose, onSuccess }) => {
                                 {errors.category && <p className={errorClass}>{errors.category.message}</p>}
                             </div>
 
-                            {/* Price (Hourly Rate) */}
+                            {/* Price (Service Price) */}
                             <div>
-                                <label htmlFor="price" className={labelClass}>Hourly Rate (₹)</label>
+                                <label htmlFor="price" className={labelClass}>Service Price (₹)</label>
                                 <input
                                     id="price"
                                     type="number"
@@ -291,14 +291,14 @@ const ServiceForm = ({ serviceId, providerId, onClose, onSuccess }) => {
                                     min="0"
                                     className={inputClass}
                                     placeholder="e.g., 500.00"
-                                    {...register('price', { required: 'Hourly Rate is required', valueAsNumber: true })}
+                                    {...register('price', { required: 'Service Price is required', valueAsNumber: true })}
                                 />
                                 {errors.price && <p className={errorClass}>{errors.price.message}</p>}
                             </div>
 
                             {/* Duration (Minimum Minutes) */}
                             <div>
-                                <label htmlFor="durationMinutes" className={labelClass}>Minimum Duration (Minutes)</label>
+                                <label htmlFor="durationMinutes" className={labelClass}>Predicted Completion Time (Minutes)</label>
                                 <input
                                     id="durationMinutes"
                                     type="number"

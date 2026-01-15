@@ -212,6 +212,8 @@ const ProfileCompletionPage = () => {
                             onChange={handleChange}
                             required
                             maxLength="6"
+                            pattern="^\d{6}$"
+                            title="Pincode must be exactly 6 digits"
                             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500"
                         />
                     </div>

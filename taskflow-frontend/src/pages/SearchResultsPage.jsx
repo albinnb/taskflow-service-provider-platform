@@ -57,6 +57,12 @@ const SearchResultsPage = () => {
                 params.lng = filters.lng;
             }
 
+            // Fix: Map 'query' to 'keyword' for backend compatibility
+            if (filters.query) {
+                params.keyword = filters.query;
+                delete params.query;
+            }
+
             Object.keys(params).forEach(key => (params[key] === '' || params[key] === undefined) && delete params[key]);
 
             try {

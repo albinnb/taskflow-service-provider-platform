@@ -28,6 +28,7 @@ const userSchema = mongoose.Schema(
     },
     phone: {
       type: String,
+      match: [/^\d{10}$/, 'Phone number must be exactly 10 digits'],
     },
     // --- Address Fields (Standardized for Location) ---
     // Note: Kept for backward compatibility and specific address details

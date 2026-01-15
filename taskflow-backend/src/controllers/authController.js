@@ -13,12 +13,20 @@ import { generateToken } from '../utils/jwt.js';
 const registerUser = asyncHandler(async (req, res) => {
     const { name, email, password, role, phone } = req.body;
 
-    console.log('Registration attempt for:', email);
+    // Strict Password Validation
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+        res.status(400);
+        throw new Error('Password must be at least 8 characters long and contain at least one letter and one number.');
+    }
+
+
 
     const userExists = await User.findOne({ email });
 
     if (userExists) {
-        console.log('User already exists:', email);
+
+
         res.status(400);
         throw new Error('User already exists');
     }
@@ -31,7 +39,7 @@ const registerUser = asyncHandler(async (req, res) => {
         phone,
     });
 
-    console.log('User created successfully:', user._id, user.email);
+
 
     if (user) {
         if (user.role === 'provider') {
@@ -49,7 +57,7 @@ const registerUser = asyncHandler(async (req, res) => {
         const isProfileComplete = user.isAddressComplete();
 
         const token = generateToken(user, process.env.JWT_SECRET, process.env.JWT_EXPIRES_IN);
-        console.log('Token generated for user:', user._id);
+
 
         res.status(201).json({
             _id: user._id,
@@ -71,13 +79,14 @@ const registerUser = asyncHandler(async (req, res) => {
 const authUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
-    console.log('Login attempt for email:', email);
+
 
     // We must select the passwordHash explicitly
     const user = await User.findOne({ email }).select('+passwordHash');
 
     if (!user) {
-        console.log('User not found for email:', email);
+
+
 
         // Check if the user was deleted/banned
         const deletedLog = await DeletedUserLog.findOne({ email }).sort({ createdAt: -1 });
@@ -95,7 +104,8 @@ const authUser = asyncHandler(async (req, res) => {
     }
 
     if (!user.passwordHash) {
-        console.log('User has no password hash:', email);
+
+
         res.status(401);
         throw new Error('Invalid email or password');
     }
@@ -107,14 +117,14 @@ const authUser = asyncHandler(async (req, res) => {
 
     // Try to match the password
     const isPasswordMatch = await user.matchPassword(password);
-    console.log('Password match result:', isPasswordMatch);
+
 
     if (isPasswordMatch) {
         // Check if address fields are complete to determine onboarding status
         const isProfileComplete = user.isAddressComplete();
 
         const token = generateToken(user, process.env.JWT_SECRET, process.env.JWT_EXPIRES_IN);
-        console.log('Login successful for:', email);
+
 
         res.json({
             _id: user._id,
@@ -125,7 +135,8 @@ const authUser = asyncHandler(async (req, res) => {
             token: token,
         });
     } else {
-        console.log('Password mismatch for user:', email);
+
+
         res.status(401);
         throw new Error('Invalid email or password');
     }
@@ -188,7 +199,8 @@ const getProviderProfile = asyncHandler(async (req, res) => {
 // @route POST /api/auth/logout
 // @access Private
 const logoutUser = asyncHandler(async (req, res) => {
-    console.log('User logged out:', req.user.email);
+
+
     res.json({ message: 'Logout successful' });
 });
 

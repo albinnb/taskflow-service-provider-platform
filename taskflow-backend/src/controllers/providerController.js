@@ -3,8 +3,11 @@ import Provider from '../models/Provider.js';
 import User from '../models/User.js';
 import Booking from '../models/Booking.js';
 import Review from '../models/Review.js';
+import Notification from '../models/Notification.js';
+import ActivityLog from '../models/ActivityLog.js';
 import ApiFeatures from '../utils/ApiFeatures.js';
 import asyncHandler from '../utils/asyncHandler.js';
+import { sendProviderStatusNotification } from '../services/emailService.js';
 import mongoose from 'mongoose';
 
 // Helper to define standard slots (must match Booking.js enum)
@@ -141,6 +144,41 @@ const updateProviderProfile = asyncHandler(async (req, res) => {
 		if (updates.phone) userUpdates.phone = updates.phone;
 
 		await User.findByIdAndUpdate(updatedProvider.userId, userUpdates);
+	}
+
+	// RETROACTIVE SERVICE APPROVAL/REMOVAL Logic (Trusted Provider)
+	if (updates.isVerified === true) {
+		const Service = mongoose.model('Service');
+		await Service.updateMany(
+			{ providerId: providerId, approvalStatus: 'pending' },
+			{ $set: { approvalStatus: 'approved' } }
+		);
+	} else if (updates.isVerified === false) {
+		const Service = mongoose.model('Service');
+		// Determine: Should we hide ALL services or just revert to pending?
+		// User requirement: "must temporary removed".
+		// Setting to 'pending' removes them from public view (as public view filters for 'approved')
+		await Service.updateMany(
+			{ providerId: providerId },
+			{ $set: { approvalStatus: 'pending' } }
+		);
+	}
+
+	// LOGGING AND NOTIFICATION FOR ADMIN ACTIONS (Verification)
+	if (req.user.role === 'admin' && updates.isVerified !== undefined) {
+		// Log the action
+		await ActivityLog.create({
+			adminId: req.user.id,
+			action: updates.isVerified ? 'PROVIDER_APPROVED' : 'PROVIDER_UNVERIFIED',
+			targetId: provider._id,
+			details: `${updates.isVerified ? 'Approved' : 'Unverified'} provider "${provider.businessName}"`
+		});
+
+		// Notify the provider
+		const providerUser = await User.findById(provider.userId);
+		if (providerUser) {
+			await sendProviderStatusNotification(providerUser, updates.isVerified);
+		}
 	}
 
 	res.status(200).json({ success: true, data: updatedProvider });
@@ -313,12 +351,12 @@ const getProviderAnalytics = asyncHandler(async (req, res) => {
 	}
 
 	// 1. Calculate Total Revenue (Sum of totalPrice for 'completed' bookings)
+	// Relaxed check: Include all 'completed' bookings regardless of payment status flag to match Top Services.
 	const revenueStats = await Booking.aggregate([
 		{
 			$match: {
 				providerId: new mongoose.Types.ObjectId(providerId),
-				status: 'completed',
-				paymentStatus: 'paid'
+				status: 'completed'
 			}
 		},
 		{
@@ -337,10 +375,80 @@ const getProviderAnalytics = asyncHandler(async (req, res) => {
 	const totalBookings = await Booking.countDocuments({ providerId });
 
 	// 3. Fetch Recent Reviews
-	const reviews = await Review.find({ providerId })
+	// Ensure providerId is used correctly.
+	const reviews = await Review.find({ providerId: providerId })
 		.sort({ createdAt: -1 })
 		.limit(5)
-		.populate('userId', 'name')
+		.populate('userId', 'name') // specific fields
+		.lean();
+
+	// 4. Monthly Revenue (Last 6 Months)
+	const sixMonthsAgo = new Date();
+	sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+	sixMonthsAgo.setHours(0, 0, 0, 0); // Start of day
+
+	const monthlyRevenue = await Booking.aggregate([
+		{
+			$match: {
+				providerId: new mongoose.Types.ObjectId(providerId),
+				status: 'completed',
+				// Removed paymentStatus: 'paid' to match Total Revenue
+				scheduledAt: { $gte: sixMonthsAgo }
+			}
+		},
+		{
+			$group: {
+				_id: { $month: '$scheduledAt' },
+				revenue: { $sum: '$totalPrice' }
+			}
+		},
+		{ $sort: { '_id': 1 } }
+	]);
+
+	// 5. Top Performing Services
+	const topServices = await Booking.aggregate([
+		{
+			$match: {
+				providerId: new mongoose.Types.ObjectId(providerId),
+				status: 'completed'
+			}
+		},
+		{
+			$group: {
+				_id: '$serviceId',
+				totalRevenue: { $sum: '$totalPrice' },
+				bookingsCount: { $sum: 1 }
+			}
+		},
+		{ $sort: { totalRevenue: -1 } },
+		{ $limit: 5 },
+		{
+			$lookup: {
+				from: 'services',
+				localField: '_id',
+				foreignField: '_id',
+				as: 'serviceDetails'
+			}
+		},
+		{ $unwind: '$serviceDetails' }, // Unwind to get object, not array
+		{
+			$project: {
+				title: '$serviceDetails.title',
+				totalRevenue: 1,
+				bookingsCount: 1
+			}
+		}
+	]);
+
+	// 6. Recent Completed Jobs (for the list)
+	const recentCompletedBookings = await Booking.find({
+		providerId: providerId,
+		status: 'completed'
+	})
+		.sort({ scheduledAt: -1 }) // Most recent first
+		.limit(10)
+		.populate('userId', 'name email')
+		.populate('serviceId', 'title')
 		.lean();
 
 	res.status(200).json({
@@ -351,7 +459,10 @@ const getProviderAnalytics = asyncHandler(async (req, res) => {
 			completedBookings,
 			averageRating: provider.ratingAvg,
 			totalReviews: provider.reviewCount,
-			recentReviews: reviews
+			recentReviews: reviews,
+			monthlyRevenue, // Array of { _id: monthNum, revenue: amount }
+			topServices,     // Array of { title, totalRevenue, bookingsCount }
+			recentCompletedBookings // New field
 		}
 	});
 });

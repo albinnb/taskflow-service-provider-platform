@@ -23,7 +23,7 @@ const RegisterPage = () => {
   if (isAuthenticated) {
     if (user.role === 'admin') return <Navigate to="/admin/dashboard" />;
     if (user.role === 'provider') return <Navigate to="/provider/dashboard" />;
-    return <Navigate to="/customer/dashboard" />;
+    return <Navigate to="/" />;
   }
 
   const onSubmit = async (data) => {
@@ -121,8 +121,11 @@ const RegisterPage = () => {
                 autoComplete="tel"
                 required
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="+91 9876543210"
-                {...formRegister('phone', { required: 'Phone number is required', pattern: { value: /^[0-9+\s-]{10,}$/, message: "Invalid phone number" } })}
+                placeholder="9876543210 (10 digits)"
+                {...formRegister('phone', {
+                  required: 'Phone number is required',
+                  pattern: { value: /^\d{10}$/, message: "Phone number must be exactly 10 digits" }
+                })}
               />
               {errors.phone && <p className="mt-1 text-sm text-destructive">{errors.phone.message}</p>}
             </div>
@@ -137,8 +140,12 @@ const RegisterPage = () => {
                   autoComplete="new-password"
                   required
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pr-10"
-                  placeholder="Create a password (min 6 chars)"
-                  {...formRegister('password', { required: 'Password is required', minLength: { value: 6, message: 'Password must be at least 6 characters' } })}
+                  placeholder="Min 8 chars, letters & numbers"
+                  {...formRegister('password', {
+                    required: 'Password is required',
+                    minLength: { value: 8, message: 'Password must be at least 8 characters' },
+                    pattern: { value: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/, message: 'Password must contain at least one letter and one number' }
+                  })}
                 />
                 <button
                   type="button"

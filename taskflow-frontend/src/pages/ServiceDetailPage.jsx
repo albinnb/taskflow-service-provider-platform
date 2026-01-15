@@ -155,9 +155,9 @@ const ServiceDetailPage = () => {
                     <div className="lg:col-span-1">
                         <div className="sticky top-24 bg-card border border-border rounded-xl p-6 shadow-lg">
                             <div className="text-center mb-6">
-                                <span className="text-muted-foreground text-sm uppercase tracking-wide font-semibold block mb-1">Hourly Rate</span>
+                                <span className="text-muted-foreground text-sm uppercase tracking-wide font-semibold block mb-1">Service Price</span>
                                 <span className="text-4xl font-extrabold text-foreground">₹{service.price.toFixed(0)}</span>
-                                <span className="text-muted-foreground ml-1">/ hr</span>
+
                             </div>
 
                             <div className="space-y-4 mb-6">

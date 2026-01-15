@@ -41,8 +41,8 @@ const ProviderSettings = ({ roleProfile, user, onUpdate }) => {
       reset({
         businessName: roleProfile.businessName,
         description: roleProfile.description,
-        phone: user.phone || '',
-        phone: user.phone || '',
+
+
       });
 
       if (roleProfile.location && roleProfile.location.coordinates) {

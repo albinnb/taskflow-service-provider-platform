@@ -20,18 +20,7 @@ const CustomDatePickerInput = forwardRef(({ value, onClick, placeholder }, ref) 
     </button>
 ));
 
-const generateDurationOptions = (minDuration) => {
-    const options = [];
-    let current = Math.ceil(minDuration / 30) * 30;
-    while (current <= 300) {
-        const hours = Math.floor(current / 60);
-        const minutes = current % 60;
-        const display = `${hours > 0 ? `${hours} hr` : ''} ${minutes > 0 ? `${minutes} min` : ''}`.trim();
-        options.push({ value: current, label: display });
-        current += 30;
-    }
-    return options;
-};
+
 
 const BookingModal = ({ service, provider, onClose }) => {
     const { isAuthenticated } = useAuth();
@@ -39,31 +28,23 @@ const BookingModal = ({ service, provider, onClose }) => {
     const [selectedStartTime, setSelectedStartTime] = useState(null);
     const [availableSlots, setAvailableSlots] = useState([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
-    const [selectedDuration, setSelectedDuration] = useState(service.durationMinutes);
 
-    const { register, handleSubmit, formState: { errors, isSubmitting }, watch } = useForm({
+    // Fixed Duration from Service
+    const fixedDuration = service.durationMinutes || 60;
+
+    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
         defaultValues: {
             notes: '',
-            durationMinutes: service.durationMinutes,
+            durationMinutes: fixedDuration,
         }
     });
 
-    const watchedDuration = watch('durationMinutes');
-
-    const totalPrice = useMemo(() => {
-        const duration = watchedDuration || service.durationMinutes;
-        const hours = duration / 60;
-        return (service.price * hours).toFixed(2);
-    }, [watchedDuration, service.price, service.durationMinutes]);
-
-    const durationOptions = useMemo(() => generateDurationOptions(service.durationMinutes), [service.durationMinutes]);
+    const totalPrice = service.price.toFixed(2); // Fixed Price logic
 
     const checkAvailability = async (date) => {
         setSelectedDate(date);
         setSelectedStartTime(null);
         setAvailableSlots([]);
-
-        if (!watchedDuration) return;
 
         setLoadingSlots(true);
 
@@ -76,7 +57,7 @@ const BookingModal = ({ service, provider, onClose }) => {
             const res = await coreApi.getProviderAvailability(provider._id, {
                 date: dateString,
                 serviceId: service._id,
-                durationMinutes: watchedDuration,
+                durationMinutes: fixedDuration,
             });
             setAvailableSlots(res.data.data);
         } catch (error) {
@@ -87,13 +68,13 @@ const BookingModal = ({ service, provider, onClose }) => {
     };
 
     React.useEffect(() => {
-        if (selectedDate && watchedDuration) {
+        if (selectedDate) {
             checkAvailability(selectedDate);
         }
-    }, [watchedDuration]);
+    }, []); // Only dependency needed is handled by DatePicker onChange really, but removing watchedDuration dependency.
 
     const handleBookingRequest = async (formData) => {
-        const finalDuration = formData.durationMinutes;
+        const finalDuration = fixedDuration;
 
         if (!isAuthenticated) {
             toast.error('You must be logged in to create a booking.');
@@ -144,7 +125,7 @@ const BookingModal = ({ service, provider, onClose }) => {
                         <div className="bg-muted/50 p-4 rounded-lg flex items-center justify-between border border-border">
                             <div>
                                 <p className="font-bold text-foreground">{service.title}</p>
-                                <p className="text-sm text-primary font-semibold">₹{service.price} / hr</p>
+                                <p className="text-sm text-primary font-semibold">₹{service.price}</p>
                             </div>
                             <div className="text-right">
                                 <p className="text-xs text-muted-foreground">Est. Total</p>
@@ -167,24 +148,13 @@ const BookingModal = ({ service, provider, onClose }) => {
                             {errors.notes && <p className='mt-1 text-sm text-destructive'>{errors.notes.message}</p>}
                         </div>
 
-                        {/* Duration */}
-                        <div>
-                            <label htmlFor="durationMinutes" className={labelClass}>
-                                <FaClock className="inline mr-2 text-primary" /> Duration
-                            </label>
-                            <select
-                                id="durationMinutes"
-                                className={inputClass}
-                                {...register('durationMinutes', {
-                                    required: true,
-                                    valueAsNumber: true,
-                                    onChange: (e) => setSelectedDuration(Number(e.target.value))
-                                })}
-                            >
-                                {durationOptions.map(option => (
-                                    <option key={option.value} value={option.value}>{option.label}</option>
-                                ))}
-                            </select>
+                        {/* Duration (Fixed) */}
+                        <div className="bg-secondary/20 p-3 rounded-lg flex items-center gap-3">
+                            <FaClock className="text-primary" />
+                            <div>
+                                <p className="text-sm font-semibold text-foreground">Estimated Duration</p>
+                                <p className="text-sm text-muted-foreground">{service.durationMinutes} minutes</p>
+                            </div>
                         </div>
 
                         {/* Date Picker */}

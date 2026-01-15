@@ -30,6 +30,7 @@ import disputeRoutes from './routes/disputeRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 // Connect to MongoDB (Must run AFTER dotenv.config())
 connectDB();
@@ -93,6 +94,7 @@ app.use('/api/disputes', disputeRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // === ERROR HANDLING MIDDLEWARE ===
 app.use(notFound);

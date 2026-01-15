@@ -90,8 +90,13 @@ const DashboardCustomer = () => {
         name: "TaskFlow",
         description: `Payment for ${booking.serviceId.title}`,
         order_id: order.id,
-        callback_url: `${window.location.origin}/payment/success?bookingId=${booking._id}`,
-        redirect: true,
+        // callback_url: `${window.location.origin}/payment/success?bookingId=${booking._id}`, // REMOVED: Causes POST 404
+        handler: function (response) {
+          // Redirect to success page manually to ensure GET request
+          const successUrl = `/payment/success?razorpay_payment_id=${response.razorpay_payment_id}&razorpay_order_id=${response.razorpay_order_id}&razorpay_signature=${response.razorpay_signature}&bookingId=${booking._id}`;
+          // maximize compatibility by using window.location
+          window.location.href = successUrl;
+        },
         prefill: { email: user?.email, contact: user?.phone },
         theme: { color: "#007acc" }
       };

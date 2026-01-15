@@ -15,44 +15,43 @@ const protect = asyncHandler(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
-    console.log('Token found in Authorization header');
-    console.log('Token length:', token.length);
+
+
   }
-  
+
   // PRIORITY 2: Fallback to cookies if no header token
   if (!token) {
     token = req.cookies.token;
     if (token) {
-      console.log('Token found in cookies (fallback)');
+
     }
   }
 
   if (!token) {
-    console.log('No token found in cookies or Authorization header');
-    console.log('Headers:', JSON.stringify(req.headers, null, 2));
+
   }
 
   if (token) {
     try {
-      console.log('Attempting to verify token...');
-      console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
-      
+
+
+
       // 2. Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      console.log('Token decoded successfully');
-      console.log('Decoded data:', decoded);
+
 
       // 3. Attach user data to the request object (excluding password)
       req.user = await User.findById(decoded.id).select('-passwordHash');
 
       if (!req.user) {
-        console.log('User not found in database for ID:', decoded.id);
+
+
         res.status(401);
         throw new Error('Not authorized, user not found');
       }
 
-      console.log('User authenticated:', req.user.email);
+
       next(); // User authenticated, proceed to the route handler
     } catch (error) {
       console.error('Token verification error:', error.message);
@@ -61,7 +60,8 @@ const protect = asyncHandler(async (req, res, next) => {
       throw new Error('Not authorized, token failed');
     }
   } else {
-    console.log('Token verification failed - no token provided');
+
+
     res.status(401);
     throw new Error('Not authorized, no token');
   }
