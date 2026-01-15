@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { coreApi } from '../../api/serviceApi';
 import { toast } from 'react-toastify';
-import { FaUserShield, FaCheckCircle, FaTimesCircle, FaTrash, FaUser, FaBuilding, FaClipboardList, FaGavel, FaBan, FaUnlock, FaSignOutAlt, FaTags, FaMoneyBillWave } from 'react-icons/fa';
+import { FaUserShield, FaCheckCircle, FaTimesCircle, FaTrash, FaUser, FaBuilding, FaClipboardList, FaGavel, FaBan, FaUnlock, FaSignOutAlt, FaTags, FaMoneyBillWave, FaBars } from 'react-icons/fa';
+
 import useAuth from '../../hooks/useAuth';
 import DisputeDetailsModal from '../../components/admin/DisputeDetailsModal';
 import CategoryManagement from '../../components/admin/CategoryManagement'; // Import new component
@@ -34,6 +35,10 @@ const DashboardAdmin = () => {
 
     const [selectedDispute, setSelectedDispute] = useState(null);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+
+    // Mobile Sidebar State
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
 
     useEffect(() => {
         fetchData(view);
@@ -154,8 +159,12 @@ const DashboardAdmin = () => {
 
     const SidebarItem = ({ id, icon: Icon, label }) => (
         <button
-            onClick={() => setView(id)}
+            onClick={() => {
+                setView(id);
+                setIsMobileMenuOpen(false); // Close sidebar on mobile select
+            }}
             className={cn(
+
                 "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors border-l-2",
                 view === id
                     ? "bg-secondary text-primary border-primary"
@@ -509,13 +518,44 @@ const DashboardAdmin = () => {
     };
 
     return (
-        <div className="flex min-h-[calc(100vh-4rem)] bg-background">
-            <aside className="w-64 border-r border-border bg-card hidden md:flex flex-col sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto no-scrollbar">
-                <div className="p-4 border-b border-border">
-                    <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Admin Console</h2>
-                    <p className="font-bold text-foreground mt-1">Administrator</p>
+        <div className="flex min-h-[calc(100vh-4rem)] bg-background relative">
+            {/* MOBILE HEADER toggler */}
+            <div className="md:hidden w-full bg-card border-b border-border p-4 flex items-center justify-between sticky top-0 z-30">
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => setIsMobileMenuOpen(true)}>
+                        <FaBars className="h-5 w-5" />
+                    </Button>
+                    <span className="font-bold text-foreground">Admin Console</span>
+                </div>
+            </div>
+
+            {/* MOBILE OVERLAY BACKDROP */}
+            {isMobileMenuOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
+            )}
+
+            {/* SIDEBAR */}
+            <aside className={cn(
+                "border-r border-border bg-card flex-col h-[calc(100vh-4rem)] overflow-y-auto no-scrollbar transition-transform duration-300 ease-in-out z-50",
+                // Mobile styles: fixed, full height, slide-in
+                "fixed inset-y-0 left-0 w-64 md:relative md:translate-x-0 md:flex",
+                isMobileMenuOpen ? "translate-x-0 top-0" : "-translate-x-full md:translate-x-0 md:top-16"
+            )}>
+                <div className="p-4 border-b border-border flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Admin Console</h2>
+                        <p className="font-bold text-foreground mt-1">Administrator</p>
+                    </div>
+                    {/* Close button for mobile inside sidebar (optional UX improvement) */}
+                    <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden text-muted-foreground hover:text-foreground">
+                        <FaTimesCircle className="h-5 w-5" />
+                    </button>
                 </div>
                 <nav className="flex-1 py-4 space-y-1">
+
 
                     <SidebarItem id={TABS.USERS} icon={FaUser} label="Users" />
                     <SidebarItem id={TABS.PROVIDERS} icon={FaBuilding} label="Taskers" />
@@ -601,26 +641,10 @@ const DashboardAdmin = () => {
                 </div>
             )}
 
-            {/* MOBILE BOTTOM NAVIGATION */}
-            <div className="md:hidden fixed bottom-0 z-40 w-full bg-card border-t border-border flex justify-around items-center p-2 safe-area-pb">
-
-                <button
-                    onClick={() => setView(TABS.USERS)}
-                    className={cn("flex flex-col items-center justify-center w-full py-1", view === TABS.USERS ? "text-primary" : "text-muted-foreground")}
-                >
-                    <FaUser className="h-5 w-5 mb-1" />
-                    <span className="text-[10px] font-medium">Users</span>
-                </button>
-                <button
-                    onClick={() => setView(TABS.CATEGORIES)}
-                    className={cn("flex flex-col items-center justify-center w-full py-1", view === TABS.CATEGORIES ? "text-primary" : "text-muted-foreground")}
-                >
-                    <FaTags className="h-5 w-5 mb-1" />
-                    <span className="text-[10px] font-medium">Cats</span>
-                </button>
-            </div>
+            {/* OLD BOTTOM NAVIGATION REMOVED */}
         </div>
     );
+
 };
 
 export default DashboardAdmin;
