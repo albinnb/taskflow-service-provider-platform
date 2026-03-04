@@ -119,7 +119,7 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
           </select>
         </div>
 
-        {/* Category Filter */}
+        {/* Category Filter - Hidden per user request 
         <div>
           <label htmlFor="category" className={labelClass}>Service Category</label>
           <select
@@ -138,6 +138,7 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
             ))}
           </select>
         </div>
+        */}
 
         {/* Rating Filter */}
         <div>
@@ -185,7 +186,7 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
           )}
         </div>
 
-        {/* Verified Provider Check */}
+        {/* Verified Provider Check - Hidden per user request 
         <div className="flex items-center pt-2">
           <input
             type="checkbox"
@@ -199,6 +200,7 @@ const FilterSidebar = ({ filters, onFilterChange }) => {
             Verified Taskers Only
           </label>
         </div>
+        */}
 
         {/* Action Buttons */}
         <div className='pt-4 space-y-3'>

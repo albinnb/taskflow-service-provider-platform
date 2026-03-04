@@ -51,11 +51,11 @@ const usersData = [
   },
 
   // --- PROVIDERS (10) ---
-  // Cleaning (2) - Kochi
+  // Cleaning (2) - Kasaragod & Trivandrum
   {
     name: 'Sarah Clean', email: 'sarah.cleaner@gmail.com', role: 'provider', password: 'password123',
-    address: { house_name: 'Villa 1', street_address: 'Clean St', city_district: 'Kochi', state: 'Kerala', pincode: '682001' },
-    location: { type: 'Point', coordinates: [76.2673, 9.9312], formattedAddress: 'Clean St, Kochi, Kerala, India' }
+    address: { house_name: 'Villa 1', street_address: 'Clean St', city_district: 'Kasaragod', state: 'Kerala', pincode: '671121' },
+    location: { type: 'Point', coordinates: [75.0, 12.5], formattedAddress: 'Clean St, Kasaragod, Kerala, India' }
   },
   {
     name: 'Green Clean Co', email: 'greenclean@gmail.com', role: 'provider', password: 'password123',
@@ -63,52 +63,52 @@ const usersData = [
     location: { type: 'Point', coordinates: [76.9366, 8.5241], formattedAddress: 'Eco Road, Trivandrum, Kerala, India' }
   },
 
-  // Fitness (2) - Bangalore
+  // Fitness (2) - Kannur & Kozhikode
   {
     name: 'Rahul Fit', email: 'rahul.fitness@gmail.com', role: 'provider', password: 'password123',
-    address: { house_name: 'Gym House', street_address: 'Fit Lane', city_district: 'Bangalore', state: 'Karnataka', pincode: '560001' },
-    location: { type: 'Point', coordinates: [77.5946, 12.9716], formattedAddress: 'Fit Lane, Bangalore, Karnataka, India' }
+    address: { house_name: 'Gym House', street_address: 'Fit Lane', city_district: 'Kannur', state: 'Kerala', pincode: '670001' },
+    location: { type: 'Point', coordinates: [75.37, 11.87], formattedAddress: 'Fit Lane, Kannur, Kerala, India' }
   },
   {
     name: 'Yoga with Priya', email: 'priya.yoga@gmail.com', role: 'provider', password: 'password123',
-    address: { house_name: 'Studio 5', street_address: 'Peace Ave', city_district: 'Mysore', state: 'Karnataka', pincode: '570001' },
-    location: { type: 'Point', coordinates: [76.6394, 12.2958], formattedAddress: 'Peace Ave, Mysore, Karnataka, India' }
+    address: { house_name: 'Studio 5', street_address: 'Peace Ave', city_district: 'Kozhikode', state: 'Kerala', pincode: '673001' },
+    location: { type: 'Point', coordinates: [75.78, 11.25], formattedAddress: 'Peace Ave, Kozhikode, Kerala, India' }
   },
 
-  // IT Repair (2) - Bangalore & Hyderabad
+  // IT Repair (2) - Thrissur & Kochi
   {
     name: 'Tech Fixer', email: 'tech.fixer@gmail.com', role: 'provider', password: 'password123',
-    address: { house_name: 'Shop 10', street_address: 'Digital Park', city_district: 'Bangalore', state: 'Karnataka', pincode: '560002' },
-    location: { type: 'Point', coordinates: [77.6346, 12.9316], formattedAddress: 'Digital Park, Bangalore, Karnataka, India' } // Slightly offset from Rahul Fit
+    address: { house_name: 'Shop 10', street_address: 'Digital Park', city_district: 'Thrissur', state: 'Kerala', pincode: '680001' },
+    location: { type: 'Point', coordinates: [76.21, 10.52], formattedAddress: 'Digital Park, Thrissur, Kerala, India' }
   },
   {
     name: 'Laptop Medic', email: 'laptop.medic@gmail.com', role: 'provider', password: 'password123',
-    address: { house_name: 'Zone 4', street_address: 'Cyber City', city_district: 'Hyderabad', state: 'Telangana', pincode: '500001' },
-    location: { type: 'Point', coordinates: [78.4867, 17.3850], formattedAddress: 'Cyber City, Hyderabad, Telangana, India' }
+    address: { house_name: 'Zone 4', street_address: 'Cyber City', city_district: 'Kochi', state: 'Kerala', pincode: '682001' },
+    location: { type: 'Point', coordinates: [76.26, 9.93], formattedAddress: 'Cyber City, Kochi, Kerala, India' }
   },
 
-  // Plumbing (2) - Chennai & Coimbatore
+  // Plumbing (2) - Kollam & Palakkad
   {
     name: 'Joe Plumber', email: 'joe.plumber@gmail.com', role: 'provider', password: 'password123',
-    address: { house_name: 'H-99', street_address: 'Water Works', city_district: 'Chennai', state: 'Tamil Nadu', pincode: '600001' },
-    location: { type: 'Point', coordinates: [80.2707, 13.0827], formattedAddress: 'Water Works, Chennai, Tamil Nadu, India' }
+    address: { house_name: 'H-99', street_address: 'Water Works', city_district: 'Kollam', state: 'Kerala', pincode: '691001' },
+    location: { type: 'Point', coordinates: [76.60, 8.89], formattedAddress: 'Water Works, Kollam, Kerala, India' }
   },
   {
     name: 'City Plumbers', email: 'city.plumbers@gmail.com', role: 'provider', password: 'password123',
-    address: { house_name: 'Depot 5', street_address: 'Main Pipe Rd', city_district: 'Coimbatore', state: 'Tamil Nadu', pincode: '641001' },
-    location: { type: 'Point', coordinates: [76.9558, 11.0168], formattedAddress: 'Main Pipe Rd, Coimbatore, Tamil Nadu, India' }
+    address: { house_name: 'Depot 5', street_address: 'Main Pipe Rd', city_district: 'Palakkad', state: 'Kerala', pincode: '678001' },
+    location: { type: 'Point', coordinates: [76.65, 10.78], formattedAddress: 'Main Pipe Rd, Palakkad, Kerala, India' }
   },
 
-  // Electrical (2) - Mumbai & Pune
+  // Electrical (2) - Malappuram & Kottayam
   {
     name: 'Max Electric', email: 'max.electric@gmail.com', role: 'provider', password: 'password123',
-    address: { house_name: 'Power House', street_address: 'Volt Lane', city_district: 'Mumbai', state: 'Maharashtra', pincode: '400001' },
-    location: { type: 'Point', coordinates: [72.8777, 19.0760], formattedAddress: 'Volt Lane, Mumbai, Maharashtra, India' }
+    address: { house_name: 'Power House', street_address: 'Volt Lane', city_district: 'Malappuram', state: 'Kerala', pincode: '676505' },
+    location: { type: 'Point', coordinates: [76.07, 11.05], formattedAddress: 'Volt Lane, Malappuram, Kerala, India' }
   },
   {
     name: 'Bright Sparks', email: 'bright.sparks@gmail.com', role: 'provider', password: 'password123',
-    address: { house_name: 'Unit 7', street_address: 'Current St', city_district: 'Pune', state: 'Maharashtra', pincode: '411001' },
-    location: { type: 'Point', coordinates: [73.8567, 18.5204], formattedAddress: 'Current St, Pune, Maharashtra, India' }
+    address: { house_name: 'Unit 7', street_address: 'Current St', city_district: 'Kottayam', state: 'Kerala', pincode: '686001' },
+    location: { type: 'Point', coordinates: [76.52, 9.58], formattedAddress: 'Current St, Kottayam, Kerala, India' }
   },
 
   // --- CUSTOMERS (10) ---
@@ -393,9 +393,10 @@ const importData = async () => {
     }
 
     // ---------------------------------------------------------
-    // 5. Reviews (Add realistic reviews for all services)
     // ---------------------------------------------------------
-    console.log('👉 Ensuring Reviews...');
+    // 5. Bookings & Reviews (Add realistic historical variance)
+    // ---------------------------------------------------------
+    console.log('👉 Ensuring Bookings & Reviews...');
     const reviewComments = [
       "Amazing service! Very professional.",
       "Good job, but arrived slightly late.",
@@ -406,54 +407,90 @@ const importData = async () => {
       "Fast and efficient.",
       "Will definitely book again.",
       "The provider was very knowledgeable.",
-      "Five stars! seamless experience."
+      "Five stars! seamless experience.",
+      "Terrible experience, would not recommend.",
+      "Average service, could be better.",
+      "Provider was rude and didn't finish on time.",
+      "They did a great job, very happy with the result.",
+      "Okay service, nothing special to mention.",
+      "Incredible attention to detail, highly satisfied!"
     ];
 
     const reviewDocs = [];
+    const dbBookings = [];
 
-    // Create ~2 reviews per service
+    // For EACH service, generate 3-6 reviews/completed bookings, plus some pending/confirmed ones
     for (const service of dbServices) {
       const existingCount = await Review.countDocuments({ serviceId: service._id });
       if (existingCount > 0) continue; // Skip if already has reviews
 
-      // Random customers
-      const c1 = dbCustomersUser[Math.floor(Math.random() * dbCustomersUser.length)];
-      const c2 = dbCustomersUser[Math.floor(Math.random() * dbCustomersUser.length)];
+      // 1. Generate COMPLETED bookings with REVIEWS
+      const numReviews = Math.floor(Math.random() * 4) + 3; // 3 to 6 reviews per service
+      for (let i = 0; i < numReviews; i++) {
+        const customer = dbCustomersUser[Math.floor(Math.random() * dbCustomersUser.length)];
 
-      // Review 1
-      reviewDocs.push({
-        userId: c1._id,
-        providerId: service.providerId,
-        serviceId: service._id,
-        rating: Math.floor(Math.random() * 2) + 4, // 4 or 5
-        comment: reviewComments[Math.floor(Math.random() * reviewComments.length)],
-      });
+        // Vary the rating: heavily weighted towards 4-5, but occasional 1-3
+        const rand = Math.random();
+        let rating;
+        if (rand > 0.9) rating = Math.floor(Math.random() * 2) + 1; // 1 or 2
+        else if (rand > 0.75) rating = 3;
+        else rating = Math.floor(Math.random() * 2) + 4; // 4 or 5
 
-      // Review 2
-      reviewDocs.push({
-        userId: c2._id,
-        providerId: service.providerId,
-        serviceId: service._id,
-        rating: Math.floor(Math.random() * 3) + 3, // 3 to 5
-        comment: reviewComments[Math.floor(Math.random() * reviewComments.length)],
-      });
-    }
+        const booking = await Booking.create({
+          userId: customer._id,
+          providerId: service.providerId,
+          serviceId: service._id,
+          scheduledAt: new Date(Date.now() - 86400000 * Math.floor(Math.random() * 45)), // Past 45 days
+          durationMinutes: service.durationMinutes,
+          totalPrice: service.price,
+          status: 'completed',
+          paymentStatus: 'paid'
+        });
+        dbBookings.push(booking);
 
-    // Create dummy COMPLETED bookings for these reviews
-    const dbBookings = [];
-    for (const r of reviewDocs) {
-      // Create a completed booking for this review
-      const b = await Booking.create({
-        userId: r.userId,
-        providerId: r.providerId,
-        serviceId: r.serviceId,
-        scheduledAt: new Date(Date.now() - 86400000 * Math.floor(Math.random() * 30)), // Past 30 days
-        durationMinutes: 60,
-        totalPrice: 100,
-        status: 'completed',
-        paymentStatus: 'paid'
-      });
-      r.bookingId = b._id; // Link review to booking
+        reviewDocs.push({
+          userId: customer._id,
+          providerId: service.providerId,
+          serviceId: service._id,
+          bookingId: booking._id,
+          rating: rating,
+          comment: reviewComments[Math.floor(Math.random() * reviewComments.length)],
+        });
+      }
+
+      // 2. Generate some PENDING bookings (future dates)
+      const numPending = Math.floor(Math.random() * 3); // 0 to 2 pending bookings
+      for (let i = 0; i < numPending; i++) {
+        const customer = dbCustomersUser[Math.floor(Math.random() * dbCustomersUser.length)];
+        const b = await Booking.create({
+          userId: customer._id,
+          providerId: service.providerId,
+          serviceId: service._id,
+          scheduledAt: new Date(Date.now() + 86400000 * Math.floor(Math.random() * 10 + 1)), // Next 1-10 days
+          durationMinutes: service.durationMinutes,
+          totalPrice: service.price,
+          status: 'pending',
+          paymentStatus: 'pending'
+        });
+        dbBookings.push(b);
+      }
+
+      // 3. Generate some CONFIRMED bookings (future dates)
+      const numConfirmed = Math.floor(Math.random() * 2); // 0 to 1 confirmed bookings
+      for (let i = 0; i < numConfirmed; i++) {
+        const customer = dbCustomersUser[Math.floor(Math.random() * dbCustomersUser.length)];
+        const b = await Booking.create({
+          userId: customer._id,
+          providerId: service.providerId,
+          serviceId: service._id,
+          scheduledAt: new Date(Date.now() + 86400000 * Math.floor(Math.random() * 5 + 1)), // Next 1-5 days
+          durationMinutes: service.durationMinutes,
+          totalPrice: service.price,
+          status: 'confirmed',
+          paymentStatus: 'paid' // assuming paid upon confirmation
+        });
+        dbBookings.push(b);
+      }
     }
 
     if (reviewDocs.length > 0) {

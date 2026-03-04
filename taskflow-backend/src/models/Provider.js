@@ -99,7 +99,6 @@ const providerSchema = new mongoose.Schema(
       },
       coordinates: {
         type: [Number], // [longitude, latitude]
-        index: '2dsphere',
         default: [0, 0],
       },
       formattedAddress: String,
@@ -139,6 +138,8 @@ const providerSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+providerSchema.index({ location: '2dsphere' });
 
 const Provider = mongoose.model('Provider', providerSchema);
 

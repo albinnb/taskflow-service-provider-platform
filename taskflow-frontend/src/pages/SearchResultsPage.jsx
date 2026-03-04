@@ -43,6 +43,7 @@ const SearchResultsPage = () => {
         limit: 10,
         sort: searchParams.get('sort') || '-ratingAvg',
         category: searchParams.get('category') || '',
+        'ratingAvg[gte]': searchParams.get('ratingAvg[gte]') || '',
     });
 
     useEffect(() => {
@@ -87,6 +88,7 @@ const SearchResultsPage = () => {
         if (filters.category) newParams.set('category', filters.category);
         if (filters.lat) newParams.set('lat', filters.lat);
         if (filters.lng) newParams.set('lng', filters.lng);
+        if (filters['ratingAvg[gte]']) newParams.set('ratingAvg[gte]', filters['ratingAvg[gte]']);
 
         setSearchParams(newParams, { replace: true });
 
@@ -99,8 +101,9 @@ const SearchResultsPage = () => {
         const page = searchParams.get('page') || 1;
         const lat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')) : undefined;
         const lng = searchParams.get('lng') ? parseFloat(searchParams.get('lng')) : undefined;
+        const ratingAvgGte = searchParams.get('ratingAvg[gte]') || '';
 
-        setFilters(prev => ({ ...prev, query, sort, category, page, lat, lng }));
+        setFilters(prev => ({ ...prev, query, sort, category, page, lat, lng, 'ratingAvg[gte]': ratingAvgGte }));
     }, [searchParams]);
 
 

@@ -40,14 +40,46 @@ function deg2rad(deg) {
  */
 const getServices = asyncHandler(async (req, res) => {
 
-    // FIX: Resolve category slug to ID if present
     if (req.query.category) {
-        const categoryDoc = await Category.findOne({ slug: req.query.category });
-        if (categoryDoc) {
-            req.query.category = categoryDoc._id; // Use ID for querying
+        // If it's a valid ObjectId, don't try to look it up by slug
+        if (mongoose.Types.ObjectId.isValid(req.query.category)) {
+            // keep it as is
         } else {
-            req.query.category = new mongoose.Types.ObjectId();
+            // Find by slug
+            const categoryDoc = await Category.findOne({ slug: req.query.category });
+            if (categoryDoc) {
+                req.query.category = categoryDoc._id; // Use ID for querying
+            } else {
+                req.query.category = new mongoose.Types.ObjectId(); // Produce no results
+            }
         }
+    }
+
+    // 1. EXTRACT PROVIDER FILTERS
+    let baseProviderFilter = {};
+    let hasProviderFilter = false;
+
+    if (req.query.isVerified === 'true') {
+        baseProviderFilter.isVerified = true;
+        delete req.query.isVerified;
+        hasProviderFilter = true;
+    }
+    if (req.query.ratingAvg && req.query.ratingAvg.gte) {
+        baseProviderFilter.ratingAvg = { $gte: Number(req.query.ratingAvg.gte) };
+        delete req.query.ratingAvg; // Prevent ApiFeatures from processing it further
+        hasProviderFilter = true;
+    }
+
+    let validProviderIds = null;
+    if (hasProviderFilter) {
+        const validProviders = await Provider.find(baseProviderFilter).select('_id');
+        validProviderIds = validProviders.map(p => p._id.toString());
+    }
+
+    // Extract sort to handle ratingAvg manually if needed
+    const sortParam = req.query.sort;
+    if (sortParam && sortParam.includes('ratingAvg')) {
+        delete req.query.sort; // We'll sort in memory
     }
 
     // GEO-SEARCH LOGIC
@@ -61,7 +93,7 @@ const getServices = asyncHandler(async (req, res) => {
                 $geoNear: {
                     near: { type: "Point", coordinates: [parseFloat(lng), parseFloat(lat)] },
                     distanceField: "dist.calculated", // Output field
-                    maxDistance: 50000, // 50km radius (optional hard limit)
+                    maxDistance: 500000, // 500km radius
                     spherical: true,
                     distanceMultiplier: 0.001 // Convert meters to km
                 }
@@ -83,43 +115,47 @@ const getServices = asyncHandler(async (req, res) => {
             providerDistanceMap[p._id.toString()] = p.dist.calculated;
         });
 
+        // Intersect Geo Providers with Valid Providers (Filters)
         const providerIds = providers.map(p => p._id);
+        let finalProviderIds = providerIds;
+        if (validProviderIds !== null) {
+            finalProviderIds = providerIds.filter(id => validProviderIds.includes(id.toString()));
+        }
 
         // 2. Build Service Query
-        // We inject the providerIds into the query
-        const queryObj = { ...req.query, providerId: { $in: providerIds } };
+        // We inject the finalProviderIds into the query
+        const queryObj = { ...req.query, providerId: { $in: finalProviderIds } };
         // Remove lat/lng so ApiFeatures doesn't choke on them or try to filter Service with them
         delete queryObj.lat;
         delete queryObj.lng;
 
-        // Advanced Fuzzy Search Logic for Geo-Search
-        // Advanced Fuzzy Search Logic for Geo-Search
-        // Advanced Text Search Logic for Geo-Search
-        // We utilize the Text Index on Service (title, description, tags)
         let searchFilter = { ...queryObj };
+        const excludedFields = ['page', 'sort', 'limit', 'fields', 'keyword'];
+        excludedFields.forEach(el => delete searchFilter[el]);
+
         let projection = {};
-        let sortOption = {}; // Default sort handled later if empty
 
-        if (req.query.keyword) {
-            const keyword = req.query.keyword;
+        if (queryObj.keyword) {
+            const keyword = queryObj.keyword;
 
-            // 1. Find providers matching this keyword (Business Name)
-            const providersByName = await Provider.find({
-                businessName: { $regex: keyword, $options: 'i' }
-            }).select('_id');
-            const matchedProviderIds = providersByName.map(p => p._id);
+            let keywordProviderQuery = { businessName: { $regex: keyword, $options: 'i' } };
+            if (hasProviderFilter) { keywordProviderQuery = { ...keywordProviderQuery, ...baseProviderFilter }; }
 
-            // 2. Build the OR Query: Match Text Index OR Provider Name
+            // 1. Find providers matching this keyword AND filters
+            const providersByName = await Provider.find(keywordProviderQuery).select('_id');
+            const matchedProviderIdsByKeyword = providersByName.map(p => p._id);
+
+            // 2. Build the OR Query
             searchFilter.$or = [
-                { $text: { $search: keyword } },
-                { providerId: { $in: matchedProviderIds } }
+                { $text: { $search: keyword }, providerId: { $in: finalProviderIds } },
+                { providerId: { $in: matchedProviderIdsByKeyword } }
             ];
 
-            // Add Text Score for sorting relevance
+            // Remove keyword from queryObj so it's not used as a strict filter later
+            delete queryObj.keyword;
+            delete searchFilter.keyword;
+
             projection = { score: { $meta: "textScore" } };
-            // Note: We prioritize distance sort below, but we could mix them if needed.
-            // For now, Geo-Search usually prioritizes distance. 
-            // If we want text relevance to break ties, we'd need more complex logic.
         } else {
             // Handle explicit queryObj if no keyword but other filters exist
             // (Already handled by spreading queryObj)
@@ -175,19 +211,29 @@ const getServices = asyncHandler(async (req, res) => {
         let projection = {};
         let isTextSearch = false;
 
+        if (validProviderIds !== null) {
+            searchFilter.providerId = { $in: validProviderIds };
+        }
+
         if (req.query.keyword) {
             isTextSearch = true;
             const keyword = req.query.keyword;
 
+            let keywordProviderQuery = { businessName: { $regex: keyword, $options: 'i' } };
+            if (hasProviderFilter) { keywordProviderQuery = { ...keywordProviderQuery, ...baseProviderFilter }; }
+
             // 1. Find providers matching this keyword (Business Name)
-            const providersByName = await Provider.find({
-                businessName: { $regex: keyword, $options: 'i' }
-            }).select('_id');
+            const providersByName = await Provider.find(keywordProviderQuery).select('_id');
             const matchedProviderIds = providersByName.map(p => p._id);
 
-            // 2. Build Query: Match Text Index OR Provider Name
+            // 2. Build Query
+            const textMatch = { $text: { $search: keyword } };
+            if (validProviderIds !== null) {
+                textMatch.providerId = { $in: validProviderIds };
+            }
+
             searchFilter.$or = [
-                { $text: { $search: keyword } },
+                textMatch,
                 { providerId: { $in: matchedProviderIds } }
             ];
 
@@ -229,7 +275,17 @@ const getServices = asyncHandler(async (req, res) => {
             .limitFields()
             .paginate();
 
-        const services = await features.query.lean();
+        let services = await features.query.lean();
+
+        // In-memory sort for ratingAvg
+        if (sortParam && sortParam.includes('ratingAvg')) {
+            const isDesc = sortParam.startsWith('-');
+            services.sort((a, b) => {
+                const ratingA = a.providerId?.ratingAvg || 0;
+                const ratingB = b.providerId?.ratingAvg || 0;
+                return isDesc ? ratingB - ratingA : ratingA - ratingB;
+            });
+        }
 
         res.status(200).json({
             success: true,
