@@ -1,0 +1,140 @@
+openapi: 3.0.0
+info:
+  title: TaskFlow Service Provider API
+  description: API documentation for the TaskFlow platform (Users, Providers, Services, Bookings, Payments).
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+    description: Development Server
+paths:
+  /api/auth/register:
+    post:
+      summary: Register a new user or provider
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                role:
+                  type: string
+                  enum: [customer, provider]
+                  default: customer
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Validation error or User already exists
+  /api/auth/login:
+    post:
+      summary: Login
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Successfully logged in
+        '401':
+          description: Invalid email or password
+  /api/services:
+    get:
+      summary: Search and list services
+      tags:
+        - Services
+      parameters:
+        - in: query
+          name: keyword
+          schema:
+            type: string
+          description: Search by title, description, or provider business name
+        - in: query
+          name: category
+          schema:
+            type: string
+          description: Category ID or slug
+        - in: query
+          name: lat
+          schema:
+            type: number
+          description: Latitude for geo-search
+        - in: query
+          name: lng
+          schema:
+            type: number
+          description: Longitude for geo-search
+      responses:
+        '200':
+          description: A list of services
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      type: object
+  /api/categories:
+    get:
+      summary: Get all service categories
+      tags:
+        - Categories
+      responses:
+        '200':
+          description: A list of categories
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
