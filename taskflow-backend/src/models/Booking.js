@@ -27,6 +27,12 @@ const bookingSchema = mongoose.Schema(
             required: true,
             ref: 'Provider',
         },
+        idempotencyKey: {
+            type: String,
+            unique: true,
+            sparse: true,
+            trim: true
+        },
         // ------------------------------------------------------------------
         // REVERT START: Back to specific time and duration
         // ------------------------------------------------------------------

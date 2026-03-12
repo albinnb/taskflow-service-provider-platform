@@ -11,6 +11,7 @@ const generateToken = (user, secret, expiresIn) => {
 		{
 			id: user._id,
 			role: user.role,
+			email: user.email,
 		},
 		secret,
 		{

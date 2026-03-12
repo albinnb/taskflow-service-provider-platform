@@ -5,6 +5,7 @@ import Booking from '../models/Booking.js';
 import Service from '../models/Service.js';
 import dotenv from 'dotenv';
 import User from '../models/User.js';
+import logger from '../utils/logger.js';
 
 dotenv.config();
 
@@ -14,7 +15,7 @@ const razorpay = new Razorpay({
 });
 
 // Log initialization
-console.log('Razorpay initialized with Key ID:', process.env.RAZORPAY_KEY_ID?.substring(0, 20) + '...');
+logger.info(`Razorpay initialized with Key ID: ${process.env.RAZORPAY_KEY_ID?.substring(0, 20)}...`);
 
 /**
  * @route   POST /api/payments/create-order
@@ -41,6 +42,17 @@ export const createPaymentOrder = asyncHandler(async (req, res) => {
         throw new Error('Booking is already paid');
     }
 
+    // Checking for existing order
+    if (booking.meta && booking.meta.orderId) {
+        return res.status(200).json({
+            success: true,
+            order: { id: booking.meta.orderId }, // Returning minimal required order details
+            totalPrice: booking.totalPrice,
+            bookingId: booking._id,
+            message: 'Returning existing active order'
+        });
+    }
+
     const amountInPaise = Math.round(booking.totalPrice * 100);
 
     const options = {
@@ -62,7 +74,7 @@ export const createPaymentOrder = asyncHandler(async (req, res) => {
             bookingId: booking._id
         });
     } catch (error) {
-        console.error("Razorpay Order Creation Failed:", error);
+        logger.error(`Razorpay Order Creation Failed: ${error.message}`);
         res.status(500);
         throw new Error('Razorpay Order Creation Failed');
     }

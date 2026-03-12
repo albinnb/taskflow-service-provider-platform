@@ -19,6 +19,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@sentry/node": "^10.43.0",
+    "@sentry/profiling-node": "^10.43.0",
     "bcrypt": "^5.1.1",
     "cloudinary": "^2.1.0",
     "cookie-parser": "^1.4.7",
@@ -29,7 +31,8 @@
     "express-rate-limit": "^7.2.0",
     "express-validator": "^7.0.1",
     "helmet": "^7.1.0",
-    "joi": "^17.13.0",
+    "ioredis": "^5.10.0",
+    "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.3.2",
     "morgan": "^1.10.0",
@@ -38,7 +41,11 @@
     "nodemailer": "^6.9.13",
     "razorpay": "^2.9.6",
     "socket.io": "^4.8.3",
-    "stripe": "^20.0.0"
+    "stripe": "^20.0.0",
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.19.0",
+    "winston-daily-rotate-file": "^5.0.0",
+    "yamljs": "^0.3.0"
   },
   "devDependencies": {
     "jest": "^29.7.0",

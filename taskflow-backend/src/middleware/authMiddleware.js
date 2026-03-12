@@ -41,23 +41,23 @@ const protect = asyncHandler(async (req, res, next) => {
 
 
 
-      // 3. Attach user data to the request object (excluding password)
-      req.user = await User.findById(decoded.id).select('-passwordHash');
+      // 3. Attach essential user data from token payload directly
+      // This eliminates the need for User.findById(decoded.id) on every request
+      req.user = {
+        _id: decoded.id,
+        role: decoded.role,
+        email: decoded.email
+      };
 
-      if (!req.user) {
-
-
-        res.status(401);
-        throw new Error('Not authorized, user not found');
-      }
-
-
+      // Optional: Add a check for token expiry best practice (though verify handles this)
+      // If needed, refresh token logic could be injected here or handled on the client side
+      
       next(); // User authenticated, proceed to the route handler
     } catch (error) {
       console.error('Token verification error:', error.message);
       console.error('Full error:', error);
       res.status(401);
-      throw new Error('Not authorized, token failed');
+      throw new Error('Not authorized, token failed or expired');
     }
   } else {
 

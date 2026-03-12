@@ -4,6 +4,13 @@ import dotenv from 'dotenv';
 // directly after the dotenv import is the safer ESM standard.
 dotenv.config();
 
+import { validateEnv } from './config/envValidator.js';
+// Validate required env vars before booting up anything else
+validateEnv();
+
+import * as Sentry from '@sentry/node';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -15,6 +22,7 @@ import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import socketHandler from './socket/socketHandler.js';
+import logger from './utils/logger.js'; // Production Logger
 
 // Import Routes
 import authRoutes from './routes/authRoutes.js';
@@ -31,12 +39,23 @@ import uploadRoutes from './routes/uploadRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import webhookRoutes from './routes/webhookRoutes.js'; // Webhooks
 
 // Connect to MongoDB (Must run AFTER dotenv.config())
 connectDB();
 
 const app = express();
 const httpServer = createServer(app);
+
+// Initialize Sentry early
+Sentry.init({
+  dsn: process.env.SENTRY_DSN || "https://examplePublicKey@o0.ingest.sentry.io/0", // Mock/Fallback DSN
+  integrations: [
+    nodeProfilingIntegration(),
+  ],
+  tracesSampleRate: 1.0, // Capture 100% of transactions for performance monitoring
+  profilesSampleRate: 1.0, // Profile 100% of sampled transactions
+});
 
 // Allowed Origins
 const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:4173'];
@@ -57,7 +76,22 @@ const PORT = process.env.PORT || 5000;
 
 // === MIDDLEWARE ===
 
-app.use(helmet());
+// === MIDDLEWARE ===
+
+// Helmet configuration allowing Swagger UI and basic development tools
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "https://validator.swagger.io"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+    },
+  },
+}));
+
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -69,14 +103,24 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(express.json());
+// Buffer the raw body for Razorpay webhook signature verification
+app.use(express.json({
+  verify: (req, res, buf) => {
+    req.rawBody = buf;
+  }
+}));
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 app.use(cookieParser());
 
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
-}
+// Use morgan to pipe HTTP request logs into Winston
+app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
+
+
+import { setupSwagger } from './config/swagger.js';
+
+// Setup Swagger API Docs
+setupSwagger(app);
 
 app.use('/api', apiLimiter);
 app.get('/', (req, res) => res.send('LocalLink API is running...'));
@@ -95,9 +139,12 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 // === ERROR HANDLING MIDDLEWARE ===
+Sentry.setupExpressErrorHandler(app); // Must be before custom error handlers
+
 app.use(notFound);
 app.use(errorHandler);
 
-httpServer.listen(PORT, () => console.log(`TaskFlow Server running in ${process.env.NODE_ENV} mode on port ${PORT}`));
+httpServer.listen(PORT, () => logger.info(`TaskFlow Server running in ${process.env.NODE_ENV} mode on port ${PORT}`));

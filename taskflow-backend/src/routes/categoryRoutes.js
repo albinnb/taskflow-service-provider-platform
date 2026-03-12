@@ -7,7 +7,9 @@ const router = express.Router();
 // @route   GET /api/categories
 // @desc    Get all categories
 // @access  Public
-router.route('/').get(getCategories);
+import { cacheMiddleware } from '../middleware/cacheMiddleware.js';
+
+router.route('/').get(cacheMiddleware(900), getCategories);
 
 // Admin only routes
 router.route('/').post(protect, authorize('admin'), createCategory);

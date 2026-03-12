@@ -1,5 +1,6 @@
 import express from 'express';
-import { body } from 'express-validator';
+import Joi from 'joi';
+import validate from '../middleware/validate.js';
 import {
   getServices,
   getServiceById,
@@ -13,28 +14,35 @@ import { protect, authorize } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+const serviceSchema = {
+    body: Joi.object({
+        title: Joi.string().required().messages({'any.required': 'Title is required'}),
+        description: Joi.string().required().messages({'any.required': 'Description is required'}),
+        category: Joi.string().hex().length(24).required().messages({'any.required': 'Valid category ID is required'}),
+        price: Joi.number().min(0).required().messages({'number.min': 'Price must be a positive number'}),
+        durationMinutes: Joi.number().integer().min(10).required().messages({'number.min': 'Duration must be at least 10 minutes'}),
+        images: Joi.array().items(Joi.object({ url: Joi.string().uri() })).optional(),
+        // Optional active status flag
+        isActive: Joi.boolean().optional()
+    })
+};
+
 // Public routes for searching
-router.get('/', getServices);
+import { cacheMiddleware } from '../middleware/cacheMiddleware.js';
+
+router.get('/', cacheMiddleware(300), getServices);
 router.get('/:id', getServiceById);
 
 // Protected routes (Provider/Admin only)
 router.use(protect, authorize(['provider', 'admin']));
 
-const serviceValidators = [
-  body('title').notEmpty().withMessage('Title is required'),
-  body('description').notEmpty().withMessage('Description is required'),
-  body('category').notEmpty().isMongoId().withMessage('Valid category ID is required'),
-  body('price').isFloat({ min: 0 }).withMessage('Price must be a positive number'),
-  body('durationMinutes').isInt({ min: 10 }).withMessage('Duration must be at least 10 minutes'),
-];
-
 // POST /api/services - Create a new service
-router.post('/', serviceValidators, createService);
+router.post('/', validate(serviceSchema), createService);
 
 // Routes requiring specific service ID
 router
   .route('/:id')
-  .put(serviceValidators, updateService) // Update a service (Owner or Admin)
+  .put(validate(serviceSchema), updateService) // Update a service (Owner or Admin)
   .delete(deleteService); // Delete a service (Owner or Admin)
 
 // ------------------------------------------------------------------

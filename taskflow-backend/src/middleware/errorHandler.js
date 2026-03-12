@@ -1,3 +1,5 @@
+import logger from '../utils/logger.js';
+
 /**
  * @desc Centralized error handler middleware.
  * It catches errors thrown in controllers, sets a proper HTTP status,
@@ -6,6 +8,7 @@
 const errorHandler = (err, req, res, next) => {
   // Check if a status code was already set, otherwise default to 500
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+
   res.status(statusCode);
 
   // Send the error message, including stack trace only in development
@@ -15,8 +18,12 @@ const errorHandler = (err, req, res, next) => {
     stack: process.env.NODE_ENV === 'production' ? null : err.stack,
   });
 
-  // Log to console for server-side debugging
-  console.error(`[Error] ${req.method} ${req.originalUrl}`, err);
+  // Log structured error internally for monitoring
+  logger.error(`${err.message} - ${req.method} ${req.originalUrl} - IP: ${req.ip}`, {
+      stack: err.stack,
+      url: req.originalUrl,
+      method: req.method
+  });
 };
 
 // Middleware to handle routes that don't exist

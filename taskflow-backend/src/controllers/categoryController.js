@@ -1,5 +1,6 @@
 import Category from '../models/Category.js';
 import asyncHandler from '../utils/asyncHandler.js';
+import { clearCache } from '../middleware/cacheMiddleware.js';
 
 // @route   GET /api/categories
 // @desc    Get all categories
@@ -36,6 +37,8 @@ export const createCategory = asyncHandler(async (req, res) => {
 
   const category = await Category.create({ name, slug, image });
 
+  await clearCache('cache:/api/categories');
+
   res.status(201).json({
     success: true,
     data: category,
@@ -59,6 +62,8 @@ export const deleteCategory = asyncHandler(async (req, res) => {
   // For now, simple delete as requested.
 
   await category.deleteOne();
+
+  await clearCache('cache:/api/categories');
 
   res.status(200).json({ success: true, message: 'Category removed' });
 });

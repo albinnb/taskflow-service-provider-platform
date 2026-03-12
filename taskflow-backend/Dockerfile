@@ -1,29 +1,45 @@
-# Stage 1: Build Stage (Not strictly necessary for simple Node app, but good practice)
-FROM node:20-alpine as build
+# Stage 1: Build & Dependencies
+FROM node:20-alpine AS builder
 
 # Set working directory
-WORKDIR /usr/src/app
+WORKDIR /app
 
-# Copy package.json and package-lock.json (if exists)
+# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install ALL dependencies (including devDependencies if needed for build steps)
+# Using legacy-peer-deps to avoid the cloudinary/ioredis conflicts
+RUN npm ci --legacy-peer-deps
 
-# Stage 2: Production Stage
-FROM node:20-alpine
-
-# Set working directory
-WORKDIR /usr/src/app
-
-# Copy dependencies from build stage
-COPY --from=build /usr/src/app/node_modules ./node_modules
-
-# Copy application source code
+# Copy the rest of the application code
 COPY . .
 
-# Expose the port the app runs on
+# Stage 2: Production Runtime
+FROM node:20-alpine
+
+# Set Node environment to production
+ENV NODE_ENV=production
+
+# Set working directory
+WORKDIR /app
+
+# Copy package.json to install only production dependencies
+COPY package*.json ./
+
+# Install only production dependencies for smaller image size
+RUN npm ci --only=production --legacy-peer-deps
+
+# Copy the built code from the builder stage
+COPY --from=builder /app/src ./src
+
+# Create uploads directory (if local storage is used for profile pics/services)
+RUN mkdir -p uploads && chown -R node:node uploads
+
+# Switch to non-root 'node' user for security
+USER node
+
+# Expose API port
 EXPOSE 5000
 
-# Run the application
-CMD [ "npm", "start" ]
+# Start the application
+CMD ["npm", "start"]

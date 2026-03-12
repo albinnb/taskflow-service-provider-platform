@@ -1,18 +1,43 @@
 import express from 'express';
+import Joi from 'joi';
+import validate from '../middleware/validate.js';
 import {
   getProviders,
   getProviderById,
   createProviderProfile,
   updateProviderProfile,
   deleteProviderProfile,
-  updateProviderAvailability, // <-- NEW IMPORT
-  getProviderAnalytics, // <-- NEW IMPORT
+  updateProviderAvailability,
+  getProviderAnalytics,
 } from '../controllers/providerController.js';
 import { getProviderAvailability } from '../controllers/bookingController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
-import { body } from 'express-validator';
 
 const router = express.Router();
+
+const providerProfileSchema = {
+    body: Joi.object({
+        businessName: Joi.string().required().messages({
+            'any.required': 'Business name is required',
+            'string.empty': 'Business name is required'
+        }),
+        description: Joi.string().min(50).required().messages({
+            'string.min': 'Description must be at least 50 characters',
+            'any.required': 'Description is required'
+        }),
+        categories: Joi.array().items(Joi.string()).optional(),
+        address: Joi.object().required().messages({
+            'any.required': 'Address is required'
+        }),
+        location: Joi.object({
+            coordinates: Joi.array().length(2).items(Joi.number()).required().messages({
+                'array.length': 'Location coordinates [lng, lat] are required',
+                'any.required': 'Location coordinates are required'
+            })
+        }).unknown(true).required(),
+        phone: Joi.string().optional()
+    })
+};
 
 // ------------------------------------------------------------------
 // PUBLIC ROUTES (Accessible by everyone)
@@ -48,12 +73,7 @@ router.put(
 router.post(
   '/',
   authorize('provider'),
-  [
-    body('businessName').notEmpty().withMessage('Business name is required'),
-    body('description').isLength({ min: 50 }).withMessage('Description must be at least 50 characters'),
-    body('address.line').notEmpty().withMessage('Address line is required'),
-    body('location.coordinates').isArray({ min: 2, max: 2 }).withMessage('Location coordinates [lng, lat] are required'),
-  ],
+  validate(providerProfileSchema),
   createProviderProfile
 );
 

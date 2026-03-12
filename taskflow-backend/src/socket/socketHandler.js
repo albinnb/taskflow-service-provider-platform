@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import Chat from '../models/Chat.js';
 import Message from '../models/Message.js';
 import User from '../models/User.js';
+import logger from '../utils/logger.js';
 
 const socketHandler = (io) => {
     io.use(async (socket, next) => {
@@ -17,11 +18,11 @@ const socketHandler = (io) => {
     });
 
     io.on('connection', (socket) => {
-        console.log(`User connected: ${socket.user.name} (${socket.user._id})`);
+        logger.info(`User connected: ${socket.user.name} (${socket.user._id})`);
 
         socket.on('join_room', (chatId) => {
             socket.join(chatId);
-            console.log(`User ${socket.user._id} joined room ${chatId}`);
+            logger.info(`User ${socket.user._id} joined room ${chatId}`);
         });
 
         socket.on('send_message', async ({ chatId, content }) => {
@@ -43,12 +44,12 @@ const socketHandler = (io) => {
 
                 io.to(chatId).emit('receive_message', message);
             } catch (error) {
-                console.error('Error sending message:', error);
+                logger.error(`Error sending message: ${error.message}`);
             }
         });
 
         socket.on('disconnect', () => {
-            console.log('User disconnected');
+            logger.info('User disconnected');
         });
     });
 };

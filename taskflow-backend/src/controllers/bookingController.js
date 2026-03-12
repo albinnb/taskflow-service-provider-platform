@@ -184,94 +184,133 @@ const createBooking = asyncHandler(async (req, res) => {
         throw new Error(errors.array()[0].msg);
     }
 
-    // --- REVERT START: Back to specific time and duration ---
-    const { serviceId, scheduledAt, notes } = req.body;
+    const { serviceId, scheduledAt, notes, idempotencyKey } = req.body;
     const userId = req.user._id;
-
-    // 1. Fetch Service and Provider details
-    const service = await Service.findById(serviceId).lean();
-    if (!service || !service.isActive) {
-        res.status(404);
-        throw new Error('Service not found or inactive');
+    
+    if (idempotencyKey) {
+        const existingBooking = await Booking.findOne({ idempotencyKey, userId });
+        if (existingBooking) {
+            return res.status(200).json({
+                success: true,
+                message: 'Existing booking retrieved via idempotency key.',
+                data: existingBooking,
+            });
+        }
     }
+    
+    // --- START TRANSACTION FOR RACE CONDITION PROTECTION ---
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    const provider = await Provider.findById(service.providerId)
-        .populate('userId', 'email name')
-        .lean();
-    if (!provider) {
-        res.status(404);
-        throw new Error('Provider not found');
+    try {
+        // 1. Fetch Service and Provider details
+        const service = await Service.findById(serviceId).session(session).lean();
+        if (!service || !service.isActive) {
+            res.status(404);
+            throw new Error('Service not found or inactive');
+        }
+
+        const provider = await Provider.findById(service.providerId)
+            .populate('userId', 'email name')
+            .session(session)
+            .lean();
+            
+        if (!provider) {
+            res.status(404);
+            throw new Error('Provider not found');
+        }
+
+        const durationMinutes = service.durationMinutes || 60; 
+
+        // --- AVAILABILITY CHECK 1: Provider General Availability ---
+        const bookingDate = new Date(scheduledAt);
+        const dayOfWeek = bookingDate.getUTCDay(); 
+        const dayName = DAY_NAMES[dayOfWeek];
+
+        const daysArray = getDaysArrayFromAvailability(provider.availability);
+
+        const dailyAvailability = daysArray.find(
+            (avail) =>
+                avail.dayOfWeek === dayOfWeek || 
+                avail.dayOfWeek === dayName      
+        );
+
+        if (!dailyAvailability || dailyAvailability.slots.length === 0) {
+            res.status(400);
+            throw new Error('Provider does not have general availability set for this day.');
+        }
+
+        // --- AVAILABILITY CHECK 2: Time Conflict Check ---
+        const bufferMinutes = provider.availability?.bufferTime || 0;
+
+        // NOTE: We pass the session to checkTimeConflict if it was updated, or we handle it inline. 
+        // For strict atomicity, the conflict check must be part of the transaction.
+        // Let's inline the conflict check here to ensure it uses the transaction session.
+        const newStart = new Date(scheduledAt);
+        const newEnd = new Date(newStart.getTime() + (durationMinutes * 60000));
+        const bufferMs = bufferMinutes * 60000;
+
+        const conflictQuery = {
+            providerId: service.providerId,
+            status: { $in: ['confirmed', 'pending'] },
+            $expr: {
+                $and: [
+                    {
+                        $lt: [
+                            "$scheduledAt",
+                            new Date(newEnd.getTime() + bufferMs) 
+                        ]
+                    },
+                    {
+                        $gt: [
+                            { $add: ["$scheduledAt", { $multiply: ["$durationMinutes", 60000] }, bufferMs] }, 
+                            newStart 
+                        ]
+                    }
+                ]
+            }
+        };
+
+        const existingConflict = await Booking.findOne(conflictQuery).session(session).lean();
+
+        if (existingConflict) {
+            res.status(409); 
+            throw new Error('The selected time slot conflicts with an existing confirmed booking.');
+        }
+
+        // 2. Calculate Total Price
+        const totalPrice = service.price;
+
+        // 3. Create the Booking (Array format required when passing session)
+        const [booking] = await Booking.create([{
+            userId,
+            serviceId,
+            providerId: service.providerId,
+            scheduledAt,
+            durationMinutes, 
+            totalPrice,
+            status: 'pending',
+            paymentStatus: 'unpaid',
+            idempotencyKey: idempotencyKey || undefined,
+            meta: { notes: notes } 
+        }], { session });
+
+        // COMMIT TRANSACTION
+        await session.commitTransaction();
+        session.endSession();
+
+        res.status(201).json({
+            success: true,
+            message: 'Booking request created. Pending payment and confirmation.',
+            data: booking,
+        });
+        
+    } catch (error) {
+        // ABORT TRANSACTION ON FAILURE
+        await session.abortTransaction();
+        session.endSession();
+        throw error; // Let asyncHandler catch it
     }
-
-    // FIXED LOGIC: Duration comes from the Service, not the User
-    const durationMinutes = service.durationMinutes || 60; // Default to 60 if missing
-
-    // --- AVAILABILITY CHECK 1: Provider General Availability ---
-    const bookingDate = new Date(scheduledAt);
-    // Use UTC day-of-week to align with the availability generation logic
-    const dayOfWeek = bookingDate.getUTCDay(); // 0 (Sunday) to 6 (Saturday)
-    const dayName = DAY_NAMES[dayOfWeek];
-
-    const daysArray = getDaysArrayFromAvailability(provider.availability);
-
-    const dailyAvailability = daysArray.find(
-        (avail) =>
-            avail.dayOfWeek === dayOfWeek || // legacy numeric
-            avail.dayOfWeek === dayName      // new string-based
-    );
-
-    if (!dailyAvailability || dailyAvailability.slots.length === 0) {
-        res.status(400);
-        throw new Error('Provider does not have general availability set for this day.');
-    }
-
-    // Check if the requested time range falls within the provider's general working hours for the day
-    const bookingTime = new Date(scheduledAt);
-    // const bookingStartHour = bookingTime.getHours();
-    // const bookingEndHour = new Date(bookingTime.getTime() + durationMinutes * 60000).getHours();
-
-    // A detailed check is complex, so we rely on the frontend to send valid slots,
-    // and rely primarily on the conflict check (below) to prevent overlaps.
-
-    // --- AVAILABILITY CHECK 2: Time Conflict Check ---
-    const bufferMinutes = provider.availability?.bufferTime || 0;
-
-    const existingConflict = await checkTimeConflict(
-        service.providerId,
-        scheduledAt,
-        durationMinutes,
-        bufferMinutes
-    );
-
-    if (existingConflict) {
-        res.status(409); // Conflict
-        throw new Error('The selected time slot conflicts with an existing confirmed booking.');
-    }
-
-    // 2. Calculate Total Price (FIXED PRICE, NOT HOURLY)
-    // The service.price is now treated as a specific Fixed Fee for the service.
-    const totalPrice = service.price;
-
-    // 3. Create the Booking
-    const booking = await Booking.create({
-        userId,
-        serviceId,
-        providerId: service.providerId,
-        scheduledAt,
-        durationMinutes, // Storing the fixed duration from service
-        totalPrice,
-        status: 'pending',
-        paymentStatus: 'unpaid',
-        meta: { notes: notes } // Essential for TaskRabbit model
-    });
-
-    // 4. Email Confirmation (Commented out)
-
-    res.status(201).json({
-        success: true,
-        message: 'Booking request created. Pending payment and confirmation.',
-        data: booking,
-    });
 });
 
 

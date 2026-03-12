@@ -1,6 +1,7 @@
 import rateLimit from 'express-rate-limit';
 
 const isDev = process.env.NODE_ENV !== 'production';
+const isTest = process.env.NODE_ENV === 'test';
 
 /**
  * @desc Rate limiting middleware to prevent brute force attacks and abuse.
@@ -17,6 +18,7 @@ const apiLimiter = rateLimit({
   standardHeaders: true, // Return rate limit info in the headers
   legacyHeaders: false, // Disable X-Rate-Limit-* headers
   skip: (req) => {
+    if (isTest) return true; // Skip all rate limiting if tests are running
     // Skip rate limiting entirely in development to improve DX
     if (isDev) return true;
 
@@ -36,6 +38,7 @@ const authLimiter = rateLimit({
     'Too many authentication attempts from this IP, please try again after 10 minutes',
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => isTest, // Do not block Jest tests
 });
 
 export { apiLimiter, authLimiter };

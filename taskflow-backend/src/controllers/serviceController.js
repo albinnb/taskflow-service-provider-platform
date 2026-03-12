@@ -7,31 +7,10 @@ import mongoose from 'mongoose';
 import Notification from '../models/Notification.js';
 import Booking from '../models/Booking.js';
 import ActivityLog from '../models/ActivityLog.js';
-
 import Category from '../models/Category.js'; // Import Category
+import { clearCache } from '../middleware/cacheMiddleware.js';
 
-/**
- * @route GET /api/services
- * @desc Get all services with search, filter, and sort (Geo-Search enabled)
- * @access Public
- */
-// Helper to calculate distance (in km) between two coordinates
-function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-    var R = 6371; // Radius of the earth in km
-    var dLat = deg2rad(lat2 - lat1);
-    var dLon = deg2rad(lon2 - lon1);
-    var a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    var d = R * c; // Distance in km
-    return d;
-}
-
-function deg2rad(deg) {
-    return deg * (Math.PI / 180);
-}
+import ServiceBusinessLayer from '../services/serviceBusinessLayer.js'; // 3-Tier Architecture
 
 /**
  * @route GET /api/services
@@ -39,264 +18,17 @@ function deg2rad(deg) {
  * @access Public
  */
 const getServices = asyncHandler(async (req, res) => {
+    // 3-Tier Architecture: Controller only parses req/res. Business logic is abstracted.
+    const result = await ServiceBusinessLayer.getAllServices(req.query);
 
-    if (req.query.category) {
-        // If it's a valid ObjectId, don't try to look it up by slug
-        if (mongoose.Types.ObjectId.isValid(req.query.category)) {
-            // keep it as is
-        } else {
-            // Find by slug
-            const categoryDoc = await Category.findOne({ slug: req.query.category });
-            if (categoryDoc) {
-                req.query.category = categoryDoc._id; // Use ID for querying
-            } else {
-                req.query.category = new mongoose.Types.ObjectId(); // Produce no results
-            }
-        }
-    }
-
-    // 1. EXTRACT PROVIDER FILTERS
-    let baseProviderFilter = {};
-    let hasProviderFilter = false;
-
-    if (req.query.isVerified === 'true') {
-        baseProviderFilter.isVerified = true;
-        delete req.query.isVerified;
-        hasProviderFilter = true;
-    }
-    if (req.query.ratingAvg && req.query.ratingAvg.gte) {
-        baseProviderFilter.ratingAvg = { $gte: Number(req.query.ratingAvg.gte) };
-        delete req.query.ratingAvg; // Prevent ApiFeatures from processing it further
-        hasProviderFilter = true;
-    }
-
-    let validProviderIds = null;
-    if (hasProviderFilter) {
-        const validProviders = await Provider.find(baseProviderFilter).select('_id');
-        validProviderIds = validProviders.map(p => p._id.toString());
-    }
-
-    // Extract sort to handle ratingAvg manually if needed
-    const sortParam = req.query.sort;
-    if (sortParam && sortParam.includes('ratingAvg')) {
-        delete req.query.sort; // We'll sort in memory
-    }
-
-    // GEO-SEARCH LOGIC
-    const { lat, lng } = req.query;
-
-    if (lat && lng) {
-        // 1. Find Providers near the location
-        // Using aggregation to calculate specific distance for each
-        const providers = await Provider.aggregate([
-            {
-                $geoNear: {
-                    near: { type: "Point", coordinates: [parseFloat(lng), parseFloat(lat)] },
-                    distanceField: "dist.calculated", // Output field
-                    maxDistance: 500000, // 500km radius
-                    spherical: true,
-                    distanceMultiplier: 0.001 // Convert meters to km
-                }
-            }
-        ]);
-
-        if (providers.length === 0) {
-            return res.status(200).json({
-                success: true,
-                count: 0,
-                total: 0,
-                data: []
-            });
-        }
-
-        // Map provider IDs to their distance
-        const providerDistanceMap = {};
-        providers.forEach(p => {
-            providerDistanceMap[p._id.toString()] = p.dist.calculated;
-        });
-
-        // Intersect Geo Providers with Valid Providers (Filters)
-        const providerIds = providers.map(p => p._id);
-        let finalProviderIds = providerIds;
-        if (validProviderIds !== null) {
-            finalProviderIds = providerIds.filter(id => validProviderIds.includes(id.toString()));
-        }
-
-        // 2. Build Service Query
-        // We inject the finalProviderIds into the query
-        const queryObj = { ...req.query, providerId: { $in: finalProviderIds } };
-        // Remove lat/lng so ApiFeatures doesn't choke on them or try to filter Service with them
-        delete queryObj.lat;
-        delete queryObj.lng;
-
-        let searchFilter = { ...queryObj };
-        const excludedFields = ['page', 'sort', 'limit', 'fields', 'keyword'];
-        excludedFields.forEach(el => delete searchFilter[el]);
-
-        let projection = {};
-
-        if (queryObj.keyword) {
-            const keyword = queryObj.keyword;
-
-            let keywordProviderQuery = { businessName: { $regex: keyword, $options: 'i' } };
-            if (hasProviderFilter) { keywordProviderQuery = { ...keywordProviderQuery, ...baseProviderFilter }; }
-
-            // 1. Find providers matching this keyword AND filters
-            const providersByName = await Provider.find(keywordProviderQuery).select('_id');
-            const matchedProviderIdsByKeyword = providersByName.map(p => p._id);
-
-            // 2. Build the OR Query
-            searchFilter.$or = [
-                { $text: { $search: keyword }, providerId: { $in: finalProviderIds } },
-                { providerId: { $in: matchedProviderIdsByKeyword } }
-            ];
-
-            // Remove keyword from queryObj so it's not used as a strict filter later
-            delete queryObj.keyword;
-            delete searchFilter.keyword;
-
-            projection = { score: { $meta: "textScore" } };
-        } else {
-            // Handle explicit queryObj if no keyword but other filters exist
-            // (Already handled by spreading queryObj)
-        }
-
-        const filterBuilder = new ApiFeatures(
-            Service.find(searchFilter, projection).populate('providerId', 'businessName ratingAvg location address userId'),
-            queryObj
-        )
-            .filter();
-
-        // .sort() -> We skip db sorting to sort by distance
-        // .paginate() -> We skip db pagination
-
-        // Force approved only
-        filterBuilder.query = filterBuilder.query.where('approvalStatus').equals('approved');
-
-        let services = await filterBuilder.query.lean();
-
-        // 3. Attach Distance and Sort
-        services = services.map(service => ({
-            ...service,
-            distance: providerDistanceMap[service.providerId._id.toString()] || 0
-        }));
-
-        services.sort((a, b) => a.distance - b.distance);
-
-        // 4. Manual Pagination
-        const page = parseInt(req.query.page, 10) || 1;
-        const limit = parseInt(req.query.limit, 10) || 20;
-        const skip = (page - 1) * limit;
-        const totalCount = services.length;
-
-        const paginatedServices = services.slice(skip, skip + limit);
-
-        return res.status(200).json({
-            success: true,
-            count: paginatedServices.length,
-            total: totalCount,
-            pagination: { page, limit, totalPages: Math.ceil(totalCount / limit) },
-            data: paginatedServices,
-        });
-
-    } else {
-        // --- STANDARD NON-GEO QUERY ---
-
-
-        // 1. Build the filter object first
-        // Advanced Fuzzy Search: Split keyword into terms and ensure ALL terms match either Title OR Description
-        // 1. Build the filter object
-        // Advanced Text Search using MongoDB $text index
-        let searchFilter = {};
-        let projection = {};
-        let isTextSearch = false;
-
-        if (validProviderIds !== null) {
-            searchFilter.providerId = { $in: validProviderIds };
-        }
-
-        if (req.query.keyword) {
-            isTextSearch = true;
-            const keyword = req.query.keyword;
-
-            let keywordProviderQuery = { businessName: { $regex: keyword, $options: 'i' } };
-            if (hasProviderFilter) { keywordProviderQuery = { ...keywordProviderQuery, ...baseProviderFilter }; }
-
-            // 1. Find providers matching this keyword (Business Name)
-            const providersByName = await Provider.find(keywordProviderQuery).select('_id');
-            const matchedProviderIds = providersByName.map(p => p._id);
-
-            // 2. Build Query
-            const textMatch = { $text: { $search: keyword } };
-            if (validProviderIds !== null) {
-                textMatch.providerId = { $in: validProviderIds };
-            }
-
-            searchFilter.$or = [
-                textMatch,
-                { providerId: { $in: matchedProviderIds } }
-            ];
-
-            projection = { score: { $meta: "textScore" } };
-
-            // Remove keyword from req.query so ApiFeatures doesn't try to filter by it
-            delete req.query.keyword;
-        }
-
-
-
-        const filterBuilder = new ApiFeatures(Service.find(searchFilter, projection), req.query)
-            .filter(); // .search() removed as we did it manually
-
-        // Get the final merged filter object
-        const finalFilter = { ...searchFilter, ...filterBuilder.getQuery() };
-        finalFilter.approvalStatus = 'approved';
-
-        // 2. Use standard count
-        const totalCount = await Service.countDocuments(finalFilter);
-
-        // 3. Execute the main query
-        let query = Service.find(finalFilter, projection)
-            .populate('providerId', 'businessName ratingAvg address location userId');
-
-        // Apply Sorting
-        if (req.query.sort) {
-            const sortBy = req.query.sort.split(',').join(' ');
-            query = query.sort(sortBy);
-        } else if (isTextSearch) {
-            // Default to Relevance Score if keyword is present and no specific sort requested
-            query = query.sort({ score: { $meta: "textScore" } });
-        } else {
-            query = query.sort('-createdAt');
-        }
-
-        // Apply Pagination & Limiting
-        const features = new ApiFeatures(query, req.query)
-            .limitFields()
-            .paginate();
-
-        let services = await features.query.lean();
-
-        // In-memory sort for ratingAvg
-        if (sortParam && sortParam.includes('ratingAvg')) {
-            const isDesc = sortParam.startsWith('-');
-            services.sort((a, b) => {
-                const ratingA = a.providerId?.ratingAvg || 0;
-                const ratingB = b.providerId?.ratingAvg || 0;
-                return isDesc ? ratingB - ratingA : ratingA - ratingB;
-            });
-        }
-
-        res.status(200).json({
-            success: true,
-            count: services.length,
-            total: totalCount,
-            pagination: features.pagination,
-            data: services,
-        });
-    }
+    return res.status(200).json({
+        success: true,
+        count: result.count,
+        total: result.total,
+        pagination: result.pagination,
+        data: result.data,
+    });
 });
-
 
 const getServiceById = asyncHandler(async (req, res) => {
     const service = await Service.findById(req.params.id)
@@ -349,6 +81,8 @@ const createService = asyncHandler(async (req, res) => {
     provider.services.push(service._id);
     await provider.save();
 
+    await clearCache('cache:/api/services'); // Invalidate Search Cache
+
     res.status(201).json({ success: true, data: service });
 });
 
@@ -391,6 +125,8 @@ const updateService = asyncHandler(async (req, res) => {
         runValidators: true,
     });
 
+    await clearCache('cache:/api/services'); // Invalidate Search Cache
+
     res.status(200).json({ success: true, data: service });
 });
 
@@ -417,6 +153,8 @@ const deleteService = asyncHandler(async (req, res) => {
     await Provider.findByIdAndUpdate(provider._id, {
         $pull: { services: service._id },
     });
+
+    await clearCache('cache:/api/services'); // Invalidate Search Cache
 
     res.status(200).json({ success: true, message: 'Service removed' });
 });
